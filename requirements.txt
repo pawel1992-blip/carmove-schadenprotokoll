@@ -2,3 +2,4 @@ streamlit
 pillow
 reportlab
 streamlit-drawable-canvas
+numpy
