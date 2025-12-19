@@ -134,12 +134,26 @@ for bereich, punkte in schadenpunkte.items():
 # -----------------------------
 # Bilder Upload
 # -----------------------------
-st.subheader("📷 Schadenbilder")
-bilder = st.file_uploader(
-    "Bilder auswählen",
+st.subheader("📷 Schadenbilder (iPhone Kamera oder Upload)")
+
+kamera_bild = st.camera_input("📸 Foto aufnehmen")
+
+upload_bilder = st.file_uploader(
+    "Oder Bilder hochladen",
     type=["jpg", "jpeg", "png"],
     accept_multiple_files=True
 )
+
+bilder = []
+
+if kamera_bild is not None:
+    bilder.append(kamera_bild)
+
+if upload_bilder:
+    bilder.extend(upload_bilder)
+
+if bilder:
+    st.success(f"✅ {len(bilder)} Bild(er) erfasst")
 
 # -----------------------------
 # Unterschrift
@@ -257,3 +271,4 @@ def pdf_erstellen():
 st.divider()
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
     pdf_erstellen()
+
