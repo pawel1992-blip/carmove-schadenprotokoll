@@ -8,7 +8,48 @@ import os
 import tempfile
 from datetime import date
 
+# =============================
+# LOGIN
+# =============================
+USERS = {
+    "admin": "1234",
+    "fahrer": "carmove"
+}
+
+def login():
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+
+    if not st.session_state.logged_in:
+        st.set_page_config(page_title="CarMoveServices Login", layout="centered")
+        st.title("🔐 Login – CarMoveServices")
+
+        username = st.text_input("Benutzername")
+        password = st.text_input("Passwort", type="password")
+
+        if st.button("Login"):
+            if username in USERS and USERS[username] == password:
+                st.session_state.logged_in = True
+                st.session_state.user = username
+                st.success("Login erfolgreich")
+                st.rerun()
+            else:
+                st.error("Falscher Benutzername oder Passwort")
+
+        st.stop()
+
+login()
+
+# =============================
+# APP
+# =============================
 st.set_page_config(page_title="CarMoveServices Schadenprotokoll", layout="wide")
+
+with st.sidebar:
+    st.write(f"👤 Eingeloggt als: **{st.session_state.user}**")
+    if st.button("🚪 Logout"):
+        st.session_state.logged_in = False
+        st.rerun()
 
 # -----------------------------
 # Schadenpunkte
@@ -71,7 +112,6 @@ st.title("🚗 CarMoveServices – Schadenprotokoll")
 st.subheader("👤 Kundendaten")
 
 col1, col2 = st.columns(2)
-
 with col1:
     kunde = st.text_input("Kundenname")
     fahrer = st.text_input("Fahrername")
@@ -92,7 +132,7 @@ for bereich, punkte in schadenpunkte.items():
             checkbox_vars[p] = st.checkbox(p)
 
 # -----------------------------
-# Bilder (iPhone Kamera)
+# Bilder
 # -----------------------------
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader(
@@ -107,25 +147,20 @@ bilder = st.file_uploader(
 st.subheader("✍️ Unterschriften")
 
 c1, c2 = st.columns(2)
-
 with c1:
     st.markdown("**Unterschrift Kunde**")
-    sign_kunde = st_canvas(
-        height=180, width=400, drawing_mode="freedraw",
-        stroke_width=2, stroke_color="black",
-        background_color="white", key="kunde"
-    )
+    sign_kunde = st_canvas(height=180, width=400, drawing_mode="freedraw",
+                           stroke_width=2, stroke_color="black",
+                           background_color="white", key="kunde")
 
 with c2:
     st.markdown("**Unterschrift Fahrer**")
-    sign_fahrer = st_canvas(
-        height=180, width=400, drawing_mode="freedraw",
-        stroke_width=2, stroke_color="black",
-        background_color="white", key="fahrer"
-    )
+    sign_fahrer = st_canvas(height=180, width=400, drawing_mode="freedraw",
+                            stroke_width=2, stroke_color="black",
+                            background_color="white", key="fahrer")
 
 # -----------------------------
-# PDF ERSTELLEN
+# PDF
 # -----------------------------
 def save_canvas(canvas_result, path):
     if canvas_result.image_data is not None:
@@ -138,7 +173,6 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         st.stop()
 
     tmp = tempfile.mkdtemp()
-
     kunde_sign = os.path.join(tmp, "kunde.png")
     fahrer_sign = os.path.join(tmp, "fahrer.png")
 
@@ -201,4 +235,3 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
 
     with open(pdf_path, "rb") as f:
         st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
-
