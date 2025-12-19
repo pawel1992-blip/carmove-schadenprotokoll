@@ -1,25 +1,19 @@
 import streamlit as st
-from PIL import Image, ImageDraw
+from streamlit_drawable_canvas import st_canvas
 from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+from reportlab.pdfgen import canvas as pdf_canvas
 from reportlab.lib.units import cm
-import tempfile
+from PIL import Image
+import numpy as np
 import os
+from datetime import datetime
 
-# =============================
-# Seitenkonfiguration
-# =============================
-st.set_page_config(
-    page_title="CarMoveServices – Schadenprotokoll",
-    layout="wide"
-)
+st.set_page_config(page_title="CarMoveServices – Schadenprotokoll", layout="wide")
 
-st.title("🚗 CarMoveServices – Schadenprotokoll")
-
-# =============================
-# Schadenpunkte (BEIBEHALTEN)
-# =============================
-SCHADENPUNKTE = {
+# -----------------------------
+# Schadenpunkte
+# -----------------------------
+schadenpunkte = {
     "Außen – Front": [
         "Frontstoßstange beschädigt",
         "Frontstoßstange gerissen",
@@ -108,121 +102,158 @@ SCHADENPUNKTE = {
     ]
 }
 
-# =============================
+# -----------------------------
+# UI – Kopf
+# -----------------------------
+st.title("🚗 CarMoveServices – Schadenprotokoll")
+
+# -----------------------------
 # Kundendaten
-# =============================
+# -----------------------------
 st.subheader("👤 Kundendaten")
 
-kunde = st.text_input("Kundenname")
-auftrag = st.text_input("Auftrag / Kennzeichen")
+col1, col2 = st.columns(2)
+with col1:
+    kunde = st.text_input("Kundenname *")
+with col2:
+    auftrag = st.text_input("Kennzeichen / Auftrag")
 
-# =============================
+# -----------------------------
 # Schäden
-# =============================
-st.subheader("🛠️ Schäden")
+# -----------------------------
+st.subheader("🛠️ Schaden-Checkliste")
 
 ausgewaehlte_schaeden = []
 
-for bereich, punkte in SCHADENPUNKTE.items():
+for bereich, punkte in schadenpunkte.items():
     with st.expander(bereich, expanded=False):
         for punkt in punkte:
             if st.checkbox(punkt, key=punkt):
                 ausgewaehlte_schaeden.append(punkt)
 
-# =============================
-# Bilder
-# =============================
-st.subheader("📸 Schadenbilder")
-
+# -----------------------------
+# Bilder Upload
+# -----------------------------
+st.subheader("📷 Schadenbilder")
 bilder = st.file_uploader(
-    "Bilder hochladen",
+    "Bilder auswählen",
     type=["jpg", "jpeg", "png"],
     accept_multiple_files=True
 )
 
-# =============================
+# -----------------------------
 # Unterschrift
-# =============================
+# -----------------------------
 st.subheader("✍️ Unterschrift Kunde")
 
-signature = st.canvas(
-    fill_color="rgba(255,255,255,1)",
-    stroke_width=2,
-    stroke_color="black",
-    background_color="white",
+canvas_result = st_canvas(
+    fill_color="rgba(255,255,255,0)",
+    stroke_width=3,
+    stroke_color="#000000",
+    background_color="#FFFFFF",
+    width=500,
     height=200,
     drawing_mode="freedraw",
     key="signature"
 )
 
-# =============================
+signature_image = None
+if canvas_result.image_data is not None:
+    img_array = canvas_result.image_data.astype(np.uint8)
+    signature_image = Image.fromarray(img_array)
+
+# -----------------------------
 # PDF erstellen
-# =============================
-def erstelle_pdf():
-    temp_dir = tempfile.mkdtemp()
-    pdf_path = os.path.join(temp_dir, "Schadenprotokoll.pdf")
+# -----------------------------
+def pdf_erstellen():
+    if not kunde:
+        st.error("❌ Kundenname fehlt")
+        return
 
-    c = canvas.Canvas(pdf_path, pagesize=A4)
-    w, h = A4
-    y = h - 2 * cm
+    if not signature_image:
+        st.error("❌ Unterschrift fehlt")
+        return
 
+    pdf_name = f"Schadenprotokoll_{kunde.replace(' ', '_')}.pdf"
+    c = pdf_canvas.Canvas(pdf_name, pagesize=A4)
+    width, height = A4
+    y = height - 2 * cm
+
+    # Titel
     c.setFont("Helvetica-Bold", 16)
     c.drawString(2 * cm, y, "Schadenprotokoll – CarMoveServices")
     y -= 1.5 * cm
 
+    # Kundendaten
     c.setFont("Helvetica", 11)
     c.drawString(2 * cm, y, f"Kunde: {kunde}")
     y -= 0.7 * cm
-    c.drawString(2 * cm, y, f"Auftrag: {auftrag}")
+    c.drawString(2 * cm, y, f"Auftrag / Kennzeichen: {auftrag}")
+    y -= 0.7 * cm
+    c.drawString(2 * cm, y, f"Datum: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
     y -= 1 * cm
 
+    # Schäden
     c.setFont("Helvetica-Bold", 12)
     c.drawString(2 * cm, y, "Festgestellte Schäden:")
     y -= 0.7 * cm
 
     c.setFont("Helvetica", 10)
-    for s in ausgewaehlte_schaeden:
+    for schaden in ausgewaehlte_schaeden:
         if y < 2 * cm:
             c.showPage()
-            y = h - 2 * cm
-        c.drawString(2.2 * cm, y, f"- {s}")
-        y -= 0.45 * cm
+            y = height - 2 * cm
+        c.drawString(2.2 * cm, y, f"- {schaden}")
+        y -= 0.5 * cm
 
     # Bilder
     if bilder:
         c.showPage()
-        y = h - 2 * cm
+        y = height - 2 * cm
         c.setFont("Helvetica-Bold", 12)
         c.drawString(2 * cm, y, "Schadenbilder")
         y -= 1 * cm
 
         for bild in bilder:
-            img_path = os.path.join(temp_dir, bild.name)
-            with open(img_path, "wb") as f:
-                f.write(bild.getbuffer())
+            img = Image.open(bild)
+            img_path = f"_tmp_{bild.name}"
+            img.save(img_path)
 
             if y < 8 * cm:
                 c.showPage()
-                y = h - 2 * cm
+                y = height - 2 * cm
 
-            c.drawImage(img_path, 2 * cm, y - 6 * cm, width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
+            c.drawImage(
+                img_path,
+                2 * cm,
+                y - 6 * cm,
+                width=width - 4 * cm,
+                height=6 * cm,
+                preserveAspectRatio=True
+            )
             y -= 7 * cm
+            os.remove(img_path)
+
+    # Unterschrift
+    c.showPage()
+    y = height - 3 * cm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2 * cm, y, "Unterschrift Kunde")
+
+    sig_path = "_signature.png"
+    signature_image.save(sig_path)
+
+    c.drawImage(sig_path, 2 * cm, y - 4 * cm, width=6 * cm, height=3 * cm)
+    os.remove(sig_path)
 
     c.save()
-    return pdf_path
 
-# =============================
+    with open(pdf_name, "rb") as f:
+        st.download_button("📄 PDF herunterladen", f, file_name=pdf_name)
+
+# -----------------------------
 # Button
-# =============================
+# -----------------------------
+st.divider()
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
-    if not kunde:
-        st.error("Bitte Kundenname eingeben")
-    else:
-        pdf = erstelle_pdf()
-        with open(pdf, "rb") as f:
-            st.download_button(
-                label="📥 PDF herunterladen",
-                data=f,
-                file_name=f"Schadenprotokoll_{kunde}.pdf",
-                mime="application/pdf"
-            )
+    pdf_erstellen()
