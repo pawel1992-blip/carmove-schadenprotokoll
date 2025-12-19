@@ -6,6 +6,7 @@ from reportlab.pdfgen import canvas as pdf_canvas
 from reportlab.lib.units import cm
 import os
 import tempfile
+from datetime import date
 
 st.set_page_config(page_title="CarMoveServices Schadenprotokoll", layout="wide")
 
@@ -68,9 +69,16 @@ st.title("🚗 CarMoveServices – Schadenprotokoll")
 # Kundendaten
 # -----------------------------
 st.subheader("👤 Kundendaten")
-kunde = st.text_input("Kundenname")
-fahrer = st.text_input("Fahrername")
-auftrag = st.text_input("Kennzeichen / Auftrag")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    kunde = st.text_input("Kundenname")
+    fahrer = st.text_input("Fahrername")
+
+with col2:
+    auftrag = st.text_input("Kennzeichen / Auftrag")
+    protokoll_datum = st.date_input("Datum", value=date.today())
 
 # -----------------------------
 # Schäden
@@ -79,12 +87,12 @@ st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 
 for bereich, punkte in schadenpunkte.items():
-    with st.expander(bereich, expanded=False):
+    with st.expander(bereich):
         for p in punkte:
             checkbox_vars[p] = st.checkbox(p)
 
 # -----------------------------
-# Bilder (iPhone Kamera!)
+# Bilder (iPhone Kamera)
 # -----------------------------
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader(
@@ -98,9 +106,9 @@ bilder = st.file_uploader(
 # -----------------------------
 st.subheader("✍️ Unterschriften")
 
-col1, col2 = st.columns(2)
+c1, c2 = st.columns(2)
 
-with col1:
+with c1:
     st.markdown("**Unterschrift Kunde**")
     sign_kunde = st_canvas(
         height=180, width=400, drawing_mode="freedraw",
@@ -108,7 +116,7 @@ with col1:
         background_color="white", key="kunde"
     )
 
-with col2:
+with c2:
     st.markdown("**Unterschrift Fahrer**")
     sign_fahrer = st_canvas(
         height=180, width=400, drawing_mode="freedraw",
@@ -147,6 +155,8 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     y -= 1.5 * cm
 
     c.setFont("Helvetica", 11)
+    c.drawString(2 * cm, y, f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
+    y -= 0.7 * cm
     c.drawString(2 * cm, y, f"Kunde: {kunde}")
     y -= 0.7 * cm
     c.drawString(2 * cm, y, f"Fahrer: {fahrer}")
@@ -178,7 +188,8 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
             img_path = os.path.join(tmp, img.name)
             with open(img_path, "wb") as f:
                 f.write(img.read())
-            c.drawImage(img_path, 2 * cm, y - 6 * cm, width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
+            c.drawImage(img_path, 2 * cm, y - 6 * cm,
+                        width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
             y -= 7 * cm
 
     c.showPage()
@@ -190,3 +201,4 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
 
     with open(pdf_path, "rb") as f:
         st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
+
