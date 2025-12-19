@@ -190,4 +190,3 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
 
     with open(pdf_path, "rb") as f:
         st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
-
