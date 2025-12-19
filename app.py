@@ -127,10 +127,13 @@ with c2:
 # -----------------------------
 # PDF ERSTELLEN
 # -----------------------------
-def save_canvas(canvas_result, path):
-    if canvas_result.image_data is not None:
-        img = Image.fromarray(canvas_result.image_data.astype("uint8"))
-        img.save(path)
+def create_section_title(c, text, y):
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2 * cm, y, text)
+    c.setLineWidth(0.5)
+    c.line(2 * cm, y - 0.2 * cm, 19 * cm, y - 0.2 * cm)
+    return y - 1 * cm
+
 
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
     if not kunde or not fahrer:
@@ -150,54 +153,97 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     w, h = A4
     y = h - 2 * cm
 
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(2 * cm, y, "Schadenprotokoll – CarMoveServices")
-    y -= 1.5 * cm
+    # -----------------------------
+    # HEADER
+    # -----------------------------
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(2 * cm, y, "Schadenprotokoll")
+    c.setFont("Helvetica", 10)
+    c.drawString(2 * cm, y - 0.6 * cm, "CarMoveServices – Fahrzeugüberführung")
+    c.line(2 * cm, y - 0.9 * cm, 19 * cm, y - 0.9 * cm)
+    y -= 2 * cm
+
+    # -----------------------------
+    # KUNDENDATEN
+    # -----------------------------
+    y = create_section_title(c, "Kundendaten", y)
 
     c.setFont("Helvetica", 11)
     c.drawString(2 * cm, y, f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
-    y -= 0.7 * cm
+    y -= 0.6 * cm
     c.drawString(2 * cm, y, f"Kunde: {kunde}")
-    y -= 0.7 * cm
+    y -= 0.6 * cm
     c.drawString(2 * cm, y, f"Fahrer: {fahrer}")
-    y -= 0.7 * cm
-    c.drawString(2 * cm, y, f"Auftrag: {auftrag}")
-    y -= 1 * cm
+    y -= 0.6 * cm
+    c.drawString(2 * cm, y, f"Kennzeichen / Auftrag: {auftrag}")
+    y -= 1.2 * cm
 
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(2 * cm, y, "Festgestellte Schäden:")
-    y -= 0.7 * cm
+    # -----------------------------
+    # SCHÄDEN
+    # -----------------------------
+    y = create_section_title(c, "Festgestellte Schäden", y)
+
     c.setFont("Helvetica", 10)
-
     for p, v in checkbox_vars.items():
         if v:
             if y < 2 * cm:
                 c.showPage()
                 y = h - 2 * cm
-            c.drawString(2.2 * cm, y, f"- {p}")
-            y -= 0.5 * cm
+                y = create_section_title(c, "Festgestellte Schäden (Fortsetzung)", y)
 
+            c.drawString(2.4 * cm, y, f"• {p}")
+            y -= 0.45 * cm
+
+    # -----------------------------
+    # BILDER
+    # -----------------------------
     if bilder:
         c.showPage()
         y = h - 2 * cm
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(2 * cm, y, "Schadenbilder")
-        y -= 1 * cm
+        y = create_section_title(c, "Schadenbilder", y)
 
         for img in bilder:
             img_path = os.path.join(tmp, img.name)
             with open(img_path, "wb") as f:
                 f.write(img.read())
-            c.drawImage(img_path, 2 * cm, y - 6 * cm,
-                        width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
+
+            if y < 8 * cm:
+                c.showPage()
+                y = h - 2 * cm
+                y = create_section_title(c, "Schadenbilder (Fortsetzung)", y)
+
+            c.drawImage(
+                img_path,
+                2 * cm,
+                y - 6 * cm,
+                width=w - 4 * cm,
+                height=6 * cm,
+                preserveAspectRatio=True
+            )
             y -= 7 * cm
 
+    # -----------------------------
+    # UNTERSCHRIFTEN
+    # -----------------------------
     c.showPage()
-    c.drawString(2 * cm, h - 3 * cm, "Unterschriften")
-    c.drawImage(kunde_sign, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
-    c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+    y = h - 2 * cm
+    y = create_section_title(c, "Unterschriften", y)
+
+    c.setFont("Helvetica", 10)
+    c.drawString(2 * cm, y, "Kunde:")
+    c.drawImage(kunde_sign, 2 * cm, y - 3.5 * cm, width=6 * cm, height=3 * cm)
+
+    c.drawString(10 * cm, y, "Fahrer:")
+    c.drawImage(fahrer_sign, 10 * cm, y - 3.5 * cm, width=6 * cm, height=3 * cm)
+
+    c.setFont("Helvetica", 9)
+    c.drawString(2 * cm, 2 * cm, "Dieses Dokument wurde digital erstellt und ist ohne Unterschrift gültig.")
 
     c.save()
 
     with open(pdf_path, "rb") as f:
-        st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
+        st.download_button(
+            "⬇️ PDF herunterladen",
+            f,
+            file_name="Schadenprotokoll_CarMoveServices.pdf"
+        )
