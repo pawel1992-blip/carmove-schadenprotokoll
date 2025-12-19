@@ -12,7 +12,7 @@ from datetime import date
 # LOGIN
 # =============================
 USERS = {
-    "admin": "1234",
+    "admin": "2804CarM",
     "fahrer": "carmove"
 }
 
@@ -235,3 +235,4 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
 
     with open(pdf_path, "rb") as f:
         st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
+
