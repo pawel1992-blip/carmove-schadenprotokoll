@@ -23,21 +23,22 @@ def login():
         username = st.text_input("Benutzername")
         password = st.text_input("Passwort", type="password")
         if st.button("Login"):
-            if username in USERS and USERS[username] == password:
+            if USERS.get(username) == password:
                 st.session_state.logged_in = True
                 st.session_state.user = username
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error("Falsche Zugangsdaten")
         st.stop()
 
 login()
 
+# Sidebar Logout
 with st.sidebar:
     st.markdown(f"**👤 Eingeloggt als:** {st.session_state.user}")
     if st.button("🚪 Logout"):
         st.session_state.logged_in = False
-        st.rerun()
+        st.experimental_rerun()
 
 # =============================
 # SCHADENPUNKTE
@@ -94,6 +95,7 @@ schadenpunkte = {
 # =============================
 st.markdown("<h1 style='color:#0F4C81;'>🚗 CarMoveServices – Schadenprotokoll</h1>", unsafe_allow_html=True)
 
+# Kundendaten
 col1, col2 = st.columns(2)
 with col1:
     kunde = st.text_input("Kundenname")
@@ -102,25 +104,20 @@ with col2:
     auftrag = st.text_input("Kennzeichen / Auftrag")
     protokoll_datum = st.date_input("Datum", value=date.today())
 
+# Schäden
 st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 for bereich, punkte in schadenpunkte.items():
     with st.expander(bereich):
-        st.markdown(f"""
-        <div style="
-            background-color:#f0f0f0;
-            padding:12px;
-            border-radius:8px;
-            margin-bottom:8px;">
-            <b style='color:#0F4C81; font-size:14px'>{bereich}</b>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"<b style='color:#0F4C81;'>{bereich}</b>", unsafe_allow_html=True)
         for punkt in punkte:
             checkbox_vars[punkt] = st.checkbox(punkt)
 
+# Schadenbilder
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader("Fotos aufnehmen oder hochladen", type=["jpg","jpeg","png"], accept_multiple_files=True)
 
+# Unterschriften
 st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
@@ -131,26 +128,14 @@ with c2:
     sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer")
 
 def save_signature(canvas_result, path):
-    if canvas_result.image_data is not None:
+    """Speichert die Unterschrift falls vorhanden."""
+    if canvas_result and canvas_result.image_data is not None:
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
 # PDF GENERIEREN
 # =============================
-if st.button("📄 Schadenprotokoll als PDF erstellen"):
-    if not kunde or not fahrer:
-        st.error("Bitte Kunden- UND Fahrernamen eingeben")
-        st.stop()
-
-    tmp = tempfile.mkdtemp()
-    zeit = datetime.now().strftime("%d.%m.%Y %H:%M")
-
-    ks = os.path.join(tmp, "kunde.png")
-    fs = os.path.join(tmp, "fahrer.png")
-    save_signature(sign_kunde, ks)
-    save_signature(sign_fahrer, fs)
-
-    pdf_path = os.path.join(tmp, "Schadenprotokoll.pdf")
+def create_pdf(pdf_path, kunde, fahrer, auftrag, protokoll_datum, checkbox_vars, bilder, sign_paths):
     c = pdf_canvas.Canvas(pdf_path, pagesize=A4)
     w, h = A4
     y = h - 2*cm
@@ -163,26 +148,27 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
 
     c.setFont("Helvetica",11)
     c.setFillColorRGB(0,0,0)
-    c.drawString(2*cm,y,f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
-    y -= 0.6*cm
-    c.drawString(2*cm,y,f"Kunde: {kunde}")
-    y -= 0.6*cm
-    c.drawString(2*cm,y,f"Fahrer: {fahrer}")
-    y -= 0.6*cm
-    c.drawString(2*cm,y,f"Auftrag: {auftrag}")
-    y -= 1*cm
+    for label, value in [("Datum", protokoll_datum.strftime('%d.%m.%Y')), 
+                         ("Kunde", kunde), 
+                         ("Fahrer", fahrer), 
+                         ("Auftrag", auftrag)]:
+        c.drawString(2*cm, y, f"{label}: {value}")
+        y -= 0.6*cm
+    y -= 0.4*cm
 
-    # SCHÄDEN MIT ABGERUNDETEN BOXEN UND SCHATTEN
+    # Schäden
     for bereich, punkte in schadenpunkte.items():
-        box_height = 0.8 + 0.5*len(punkte)
+        selected = [p for p in punkte if checkbox_vars.get(p)]
+        if not selected:
+            continue
+        box_height = 0.8 + 0.5*len(selected)
         if y - box_height*cm < 2*cm:
             c.showPage()
             y = h - 2*cm
 
-        # Schatten
+        # Schatten & Box
         c.setFillColor(HexColor("#d9d9d9"))
         c.roundRect(2.1*cm, y - box_height*cm - 0.1*cm, w - 4.2*cm, box_height*cm, 6, fill=True, stroke=False)
-        # Box
         c.setFillColor(HexColor("#f0f0f0"))
         c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
 
@@ -195,16 +181,15 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         # Punkte
         c.setFont("Helvetica",10)
         c.setFillColorRGB(0,0,0)
-        for punkt in punkte:
-            if checkbox_vars[punkt]:
-                if y < 2*cm:
-                    c.showPage()
-                    y = h - 2*cm
-                c.drawString(2.4*cm, y, f"- {punkt}")
-                y -= 0.5*cm
+        for punkt in selected:
+            if y < 2*cm:
+                c.showPage()
+                y = h - 2*cm
+            c.drawString(2.4*cm, y, f"- {punkt}")
+            y -= 0.5*cm
         y -= 0.3*cm
 
-    # BILDER
+    # Bilder
     if bilder:
         c.showPage()
         y = h - 2*cm
@@ -214,30 +199,50 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         y -= 1*cm
         for img_file in bilder:
             img = Image.open(img_file).convert("RGB")
-            img_path = os.path.join(tmp,img_file.name)
-            img.save(img_path)
+            tmp_path = os.path.join(tempfile.gettempdir(), img_file.name)
+            img.save(tmp_path)
             if y < 7*cm:
                 c.showPage()
                 y = h - 2*cm
-            c.drawImage(img_path,2*cm,y-6*cm,width=w-4*cm,height=6*cm,preserveAspectRatio=True)
+            c.drawImage(tmp_path,2*cm,y-6*cm,width=w-4*cm,height=6*cm,preserveAspectRatio=True)
             y -= 7*cm
 
-    # UNTERSCHRIFTEN
+    # Unterschriften
     c.showPage()
+    y = h - 3*cm
     c.setFont("Helvetica-Bold",12)
-    c.setFillColorRGB(0,0,0)
-    c.drawString(2*cm,h-3*cm,"Unterschriften:")
+    c.drawString(2*cm,y,"Unterschriften:")
+    zeit = datetime.now().strftime("%d.%m.%Y %H:%M")
 
-    c.drawImage(ks,2*cm,h-7*cm,width=6*cm,height=3*cm)
-    c.setFont("Helvetica",10)
-    c.drawCentredString(5*cm,h-7.6*cm,f"Kunde: {kunde}")
-    c.drawCentredString(5*cm,h-8.2*cm,zeit)
+    if sign_paths.get("kunde"):
+        c.drawImage(sign_paths["kunde"], 2*cm, y-4*cm, width=6*cm, height=3*cm)
+        c.setFont("Helvetica",10)
+        c.drawCentredString(5*cm, y-4.6*cm, f"Kunde: {kunde}")
+        c.drawCentredString(5*cm, y-5.2*cm, zeit)
 
-    c.drawImage(fs,10*cm,h-7*cm,width=6*cm,height=3*cm)
-    c.drawCentredString(13*cm,h-7.6*cm,f"Fahrer: {fahrer}")
-    c.drawCentredString(13*cm,h-8.2*cm,zeit)
+    if sign_paths.get("fahrer"):
+        c.drawImage(sign_paths["fahrer"], 10*cm, y-4*cm, width=6*cm, height=3*cm)
+        c.drawCentredString(13*cm, y-4.6*cm, f"Fahrer: {fahrer}")
+        c.drawCentredString(13*cm, y-5.2*cm, zeit)
 
     c.save()
 
+# PDF erstellen
+if st.button("📄 Schadenprotokoll als PDF erstellen"):
+    if not kunde or not fahrer:
+        st.error("Bitte Kunden- UND Fahrernamen eingeben")
+        st.stop()
+
+    tmp_dir = tempfile.mkdtemp()
+    sign_paths = {
+        "kunde": os.path.join(tmp_dir, "kunde.png"),
+        "fahrer": os.path.join(tmp_dir, "fahrer.png")
+    }
+    save_signature(sign_kunde, sign_paths["kunde"])
+    save_signature(sign_fahrer, sign_paths["fahrer"])
+
+    pdf_path = os.path.join(tmp_dir, "Schadenprotokoll.pdf")
+    create_pdf(pdf_path, kunde, fahrer, auftrag, protokoll_datum, checkbox_vars, bilder, sign_paths)
+
     with open(pdf_path,"rb") as f:
-        st.download_button("⬇️ PDF herunterladen",f,file_name="Schadenprotokoll.pdf")
+        st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
