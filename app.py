@@ -6,7 +6,7 @@ from reportlab.pdfgen import canvas as pdf_canvas
 from reportlab.lib.units import cm
 import os
 import tempfile
-from datetime import date
+from datetime import date, datetime
 
 # =============================
 # PAGE CONFIG (NUR EINMAL)
@@ -181,6 +181,8 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         st.error("Bitte Kunden- UND Fahrernamen eingeben")
         st.stop()
 
+    unterschrift_zeit = datetime.now().strftime("%d.%m.%Y %H:%M")
+
     tmp = tempfile.mkdtemp()
     kunde_sign = os.path.join(tmp, "kunde.png")
     fahrer_sign = os.path.join(tmp, "fahrer.png")
@@ -231,14 +233,11 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
             img_path = os.path.join(tmp, img.name)
             with open(img_path, "wb") as f:
                 f.write(img.read())
-            c.drawImage(
-                img_path, 2 * cm, y - 6 * cm,
-                width=w - 4 * cm, height=6 * cm,
-                preserveAspectRatio=True
-            )
+            c.drawImage(img_path, 2 * cm, y - 6 * cm,
+                        width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
             y -= 7 * cm
 
-    # ---------- Unterschriften-Seite ----------
+    # ---------- Unterschriften ----------
     c.showPage()
     c.setFont("Helvetica-Bold", 12)
     c.drawString(2 * cm, h - 3 * cm, "Unterschriften")
@@ -246,11 +245,13 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     # Kunde
     c.drawImage(kunde_sign, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
     c.setFont("Helvetica", 10)
-    c.drawCentredString(5 * cm, h - 7.5 * cm, "Kunde")
+    c.drawCentredString(5 * cm, h - 7.5 * cm, f"Kunde: {kunde}")
+    c.drawCentredString(5 * cm, h - 8.1 * cm, unterschrift_zeit)
 
     # Fahrer
     c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
-    c.drawCentredString(13 * cm, h - 7.5 * cm, "Fahrer")
+    c.drawCentredString(13 * cm, h - 7.5 * cm, f"Fahrer: {fahrer}")
+    c.drawCentredString(13 * cm, h - 8.1 * cm, unterschrift_zeit)
 
     c.save()
 
@@ -260,4 +261,3 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
             f,
             file_name="Schadenprotokoll.pdf"
         )
-
