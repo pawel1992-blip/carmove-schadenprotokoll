@@ -9,6 +9,14 @@ import tempfile
 from datetime import date
 
 # =============================
+# PAGE CONFIG (NUR EINMAL)
+# =============================
+st.set_page_config(
+    page_title="CarMoveServices Schadenprotokoll",
+    layout="wide"
+)
+
+# =============================
 # LOGIN
 # =============================
 USERS = {
@@ -21,7 +29,6 @@ def login():
         st.session_state.logged_in = False
 
     if not st.session_state.logged_in:
-        st.set_page_config(page_title="CarMoveServices Login", layout="centered")
         st.title("🔐 Login – CarMoveServices")
 
         username = st.text_input("Benutzername")
@@ -41,10 +48,8 @@ def login():
 login()
 
 # =============================
-# APP
+# SIDEBAR
 # =============================
-st.set_page_config(page_title="CarMoveServices Schadenprotokoll", layout="wide")
-
 with st.sidebar:
     st.write(f"👤 Eingeloggt als: **{st.session_state.user}**")
     if st.button("🚪 Logout"):
@@ -149,15 +154,19 @@ st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
     st.markdown("**Unterschrift Kunde**")
-    sign_kunde = st_canvas(height=180, width=400, drawing_mode="freedraw",
-                           stroke_width=2, stroke_color="black",
-                           background_color="white", key="kunde")
+    sign_kunde = st_canvas(
+        height=180, width=400, drawing_mode="freedraw",
+        stroke_width=2, stroke_color="black",
+        background_color="white", key="kunde"
+    )
 
 with c2:
     st.markdown("**Unterschrift Fahrer**")
-    sign_fahrer = st_canvas(height=180, width=400, drawing_mode="freedraw",
-                            stroke_width=2, stroke_color="black",
-                            background_color="white", key="fahrer")
+    sign_fahrer = st_canvas(
+        height=180, width=400, drawing_mode="freedraw",
+        stroke_width=2, stroke_color="black",
+        background_color="white", key="fahrer"
+    )
 
 # -----------------------------
 # PDF
@@ -222,28 +231,33 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
             img_path = os.path.join(tmp, img.name)
             with open(img_path, "wb") as f:
                 f.write(img.read())
-            c.drawImage(img_path, 2 * cm, y - 6 * cm,
-                        width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
+            c.drawImage(
+                img_path, 2 * cm, y - 6 * cm,
+                width=w - 4 * cm, height=6 * cm,
+                preserveAspectRatio=True
+            )
             y -= 7 * cm
 
-c.showPage()
-c.setFont("Helvetica-Bold", 12)
-c.drawString(2 * cm, h - 3 * cm, "Unterschriften")
+    # ---------- Unterschriften-Seite ----------
+    c.showPage()
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2 * cm, h - 3 * cm, "Unterschriften")
 
-# Kunde
-c.drawImage(kunde_sign, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
-c.setFont("Helvetica", 10)
-c.drawCentredString(5 * cm, h - 7.5 * cm, "Kunde")
+    # Kunde
+    c.drawImage(kunde_sign, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+    c.setFont("Helvetica", 10)
+    c.drawCentredString(5 * cm, h - 7.5 * cm, "Kunde")
 
-# Fahrer
-c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
-c.drawCentredString(13 * cm, h - 7.5 * cm, "Fahrer")
- 
+    # Fahrer
+    c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+    c.drawCentredString(13 * cm, h - 7.5 * cm, "Fahrer")
 
- 
+    c.save()
 
     with open(pdf_path, "rb") as f:
-        st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
-
-
+        st.download_button(
+            "⬇️ PDF herunterladen",
+            f,
+            file_name="Schadenprotokoll.pdf"
+        )
 
