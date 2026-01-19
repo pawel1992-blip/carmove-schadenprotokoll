@@ -14,27 +14,28 @@ from datetime import date, datetime
 # =============================
 USERS = {"admin": "2804CarM", "fahrer": "carmove"}
 
-def login():
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
-        st.session_state.user = ""
+# Session-State initialisieren
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+    st.session_state.user = ""
 
-    if not st.session_state.logged_in:
-        st.title("🔐 Login – CarMoveServices")
-        username = st.text_input("Benutzername")
-        password = st.text_input("Passwort", type="password")
+def show_login():
+    st.title("🔐 Login – CarMoveServices")
+    username = st.text_input("Benutzername")
+    password = st.text_input("Passwort", type="password")
+    if st.button("Login"):
+        if username in USERS and USERS[username] == password:
+            st.session_state.logged_in = True
+            st.session_state.user = username
+            st.success("Erfolgreich eingeloggt!")
+            st.experimental_rerun()
+        else:
+            st.error("Falsche Zugangsdaten")
 
-        if st.button("Login"):
-            # Benutzername genau prüfen
-            if username in USERS and USERS[username] == password:
-                st.session_state.logged_in = True
-                st.session_state.user = username
-                st.experimental_rerun()
-            else:
-                st.error("Falsche Zugangsdaten")
-        st.stop()
-
-login()
+# Prüfen, ob eingeloggter Benutzer
+if not st.session_state.logged_in:
+    show_login()
+    st.stop()  # Alles andere wird gestoppt, bis Login erfolgreich
 
 # Sidebar Logout
 with st.sidebar:
