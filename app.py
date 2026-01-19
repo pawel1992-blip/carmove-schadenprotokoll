@@ -28,13 +28,12 @@ def login():
 
     if not st.session_state.logged_in:
         st.title("🔐 Login – CarMoveServices")
-        username = st.text_input("Benutzername")
-        password = st.text_input("Passwort", type="password")
-
+        u = st.text_input("Benutzername")
+        p = st.text_input("Passwort", type="password")
         if st.button("Login"):
-            if username in USERS and USERS[username] == password:
+            if u in USERS and USERS[u] == p:
                 st.session_state.logged_in = True
-                st.session_state.user = username
+                st.session_state.user = u
                 st.rerun()
             else:
                 st.error("Falsche Zugangsdaten")
@@ -49,7 +48,7 @@ with st.sidebar:
         st.rerun()
 
 # =============================
-# SCHADENPUNKTE
+# SCHADENPUNKTE (VOLL)
 # =============================
 schadenpunkte = {
     "Außen – Front": [
@@ -113,10 +112,10 @@ with col2:
 
 st.subheader("🛠️ Schäden")
 checkbox_vars = {}
-for bereich, punkte in schadenpunkte.items():
-    with st.expander(bereich):
-        for p in punkte:
-            checkbox_vars[p] = st.checkbox(p)
+for b, p in schadenpunkte.items():
+    with st.expander(b):
+        for s in p:
+            checkbox_vars[s] = st.checkbox(s)
 
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader(
@@ -137,16 +136,16 @@ def save_signature(canvas_result, path):
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
-# PDF (MODERN DESIGN)
+# PDF
 # =============================
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
     tmp = tempfile.mkdtemp()
     zeit = datetime.now().strftime("%d.%m.%Y %H:%M")
 
-    kunde_sign = os.path.join(tmp, "kunde.png")
-    fahrer_sign = os.path.join(tmp, "fahrer.png")
-    save_signature(sign_kunde, kunde_sign)
-    save_signature(sign_fahrer, fahrer_sign)
+    ks = os.path.join(tmp, "kunde.png")
+    fs = os.path.join(tmp, "fahrer.png")
+    save_signature(sign_kunde, ks)
+    save_signature(sign_fahrer, fs)
 
     pdf_path = os.path.join(tmp, "Schadenprotokoll.pdf")
     c = pdf_canvas.Canvas(pdf_path, pagesize=A4)
@@ -161,42 +160,65 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     c.setFont("Helvetica", 12)
     c.drawString(2 * cm, h - 3.3 * cm, "Digitales Schadenprotokoll")
 
-    # CARD
+    # DATEN
     y = h - 5 * cm
-    c.setFillColor(colors.whitesmoke)
-    c.roundRect(1.5 * cm, y - 7 * cm, w - 3 * cm, 7 * cm, 10, fill=1)
-
     c.setFillColor(colors.black)
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(2 * cm, y - 1 * cm, "Fahrzeug & Kunde")
-
     c.setFont("Helvetica", 11)
-    c.drawString(2 * cm, y - 2 * cm, f"Kunde: {kunde}")
-    c.drawString(2 * cm, y - 2.8 * cm, f"Fahrer: {fahrer}")
-    c.drawString(2 * cm, y - 3.6 * cm, f"Auftrag: {auftrag}")
-    c.drawString(2 * cm, y - 4.4 * cm, f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
+    c.drawString(2 * cm, y, f"Kunde: {kunde}")
+    y -= 0.6 * cm
+    c.drawString(2 * cm, y, f"Fahrer: {fahrer}")
+    y -= 0.6 * cm
+    c.drawString(2 * cm, y, f"Auftrag: {auftrag}")
+    y -= 0.6 * cm
+    c.drawString(2 * cm, y, f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
 
-    # SCHÄDEN
+    # SCHÄDEN (DYNAMISCH)
+    y -= 1 * cm
     c.setFont("Helvetica-Bold", 12)
-    c.drawString(2 * cm, y - 5.6 * cm, "Festgestellte Schäden")
+    c.drawString(2 * cm, y, "Festgestellte Schäden")
+    y -= 0.7 * cm
     c.setFont("Helvetica", 10)
 
-    y2 = y - 6.4 * cm
     for p, v in checkbox_vars.items():
         if v:
-            c.drawString(2.2 * cm, y2, f"• {p}")
-            y2 -= 0.45 * cm
+            if y < 2 * cm:
+                c.showPage()
+                y = h - 2 * cm
+                c.setFont("Helvetica", 10)
+            c.drawString(2.2 * cm, y, f"• {p}")
+            y -= 0.45 * cm
+
+    # BILDER
+    if bilder:
+        c.showPage()
+        y = h - 2 * cm
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(2 * cm, y, "Schadenbilder")
+        y -= 1 * cm
+
+        for up in bilder:
+            img = Image.open(up).convert("RGB")
+            pth = os.path.join(tmp, up.name)
+            img.save(pth)
+
+            if y < 7 * cm:
+                c.showPage()
+                y = h - 2 * cm
+
+            c.drawImage(pth, 2 * cm, y - 6 * cm, width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
+            y -= 7 * cm
 
     # UNTERSCHRIFTEN
     c.showPage()
     c.setFont("Helvetica-Bold", 14)
     c.drawString(2 * cm, h - 3 * cm, "Digitale Bestätigung")
 
-    c.drawImage(kunde_sign, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+    c.drawImage(ks, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+    c.setFont("Helvetica", 10)
     c.drawCentredString(5 * cm, h - 7.6 * cm, f"Kunde: {kunde}")
     c.drawCentredString(5 * cm, h - 8.2 * cm, zeit)
 
-    c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+    c.drawImage(fs, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
     c.drawCentredString(13 * cm, h - 7.6 * cm, f"Fahrer: {fahrer}")
     c.drawCentredString(13 * cm, h - 8.2 * cm, zeit)
 
