@@ -108,41 +108,10 @@ st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 for bereich, punkte in schadenpunkte.items():
     with st.expander(bereich, expanded=False):
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#f5f7fa;
-                padding:12px 16px;
-                border-radius:12px;
-                box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-                margin-bottom:10px;">
-                <h4 style='color:#0F4C81; margin-bottom:8px;'>{bereich}</h4>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
         cols = st.columns(2)
         for i, punkt in enumerate(punkte):
             col = cols[i % 2]
             checkbox_vars[punkt] = col.checkbox(punkt)
-
-# =============================
-# Sonstiges / Eigene Schäden
-# =============================
-st.subheader("✏️ Sonstiges / Bemerkungen")
-st.markdown(
-    """
-    <div style="
-        background-color:#f5f7fa;
-        padding:12px 16px;
-        border-radius:12px;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-        margin-bottom:10px;">
-    """,
-    unsafe_allow_html=True
-)
-sonstiges_text = st.text_area("Hier eigenen Schaden eintragen (optional)", height=100)
-st.markdown("</div>", unsafe_allow_html=True)
 
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader("Fotos aufnehmen oder hochladen", type=["jpg","jpeg","png"], accept_multiple_files=True)
@@ -151,11 +120,22 @@ st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
     st.markdown("**Kunde**")
-    sign_kunde = st_canvas(height=180, width=400, background_color="white", key="kunde",stroke_width=2,)
-    
+    sign_kunde = st_canvas(
+        height=180,
+        width=400,
+        background_color="white",
+        key="kunde",
+        stroke_width=2,  # dünnere Striche
+    )
 with c2:
     st.markdown("**Fahrer**")
-    sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer",stroke_width=2,)
+    sign_fahrer = st_canvas(
+        height=180,
+        width=400,
+        background_color="white",
+        key="fahrer",
+        stroke_width=2,  # dünnere Striche
+    )
 
 def save_signature(canvas_result, path):
     if canvas_result and canvas_result.image_data is not None:
@@ -164,7 +144,11 @@ def save_signature(canvas_result, path):
 # =============================
 # PDF GENERIEREN
 # =============================
-def create_pdf():
+if st.button("📄 Schadenprotokoll als PDF erstellen"):
+    if not kunde or not fahrer:
+        st.error("Bitte Kunden- UND Fahrernamen eingeben")
+        st.stop()
+
     tmp = tempfile.mkdtemp()
     zeit = datetime.now().strftime("%d.%m.%Y %H:%M")
 
@@ -181,10 +165,9 @@ def create_pdf():
     # HEADER
     c.setFont("Helvetica-Bold",18)
     c.setFillColor(HexColor("#0F4C81"))
-    c.drawString(2*cm, y, "Schadenprotokoll – CarMoveServices")
+    c.drawString(2*cm,y,"Schadenprotokoll – CarMoveServices")
     y -= 2*cm
 
-    # Kundendaten
     c.setFont("Helvetica",11)
     c.setFillColorRGB(0,0,0)
     c.drawString(2*cm,y,f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
@@ -196,70 +179,42 @@ def create_pdf():
     c.drawString(2*cm,y,f"Auftrag: {auftrag}")
     y -= 1*cm
 
-    # Schäden
+    # SCHÄDEN MIT ABGERUNDETEN BOXEN UND SCHATTEN
     for bereich, punkte in schadenpunkte.items():
         checked_punkte = [p for p in punkte if checkbox_vars[p]]
         if not checked_punkte:
             continue
 
-        box_height = 0.8 + 0.5 * len(checked_punkte)
+        box_height = 0.8 + 0.5*len(checked_punkte)
         if y - box_height*cm < 2*cm:
             c.showPage()
             y = h - 2*cm
 
-        # Hintergrund Box
-        c.setFillColor(HexColor("#f0f0f0"))
-        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
         # Schatten
         c.setFillColor(HexColor("#d9d9d9"))
-        c.roundRect(2.05*cm, y - box_height*cm - 0.05*cm, w - 4.1*cm, box_height*cm, 6, fill=True, stroke=False)
+        c.roundRect(2.1*cm, y - box_height*cm - 0.1*cm, w - 4.2*cm, box_height*cm, 6, fill=True, stroke=False)
+        # Box
+        c.setFillColor(HexColor("#f0f0f0"))
+        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
 
         # Überschrift
         c.setFont("Helvetica-Bold",12)
         c.setFillColor(HexColor("#0F4C81"))
-        c.drawString(2.2*cm, y - 0.3*cm, bereich)
+        c.drawString(2.2*cm, y, bereich)
         y -= 0.8*cm
 
-        # Angekreuzte Punkte
+        # Punkte
         c.setFont("Helvetica",10)
+        c.setFillColorRGB(0,0,0)
         for punkt in checked_punkte:
             if y < 2*cm:
                 c.showPage()
                 y = h - 2*cm
-            c.setFillColor(HexColor("#000000"))
             c.drawString(2.4*cm, y, f"- {punkt}")
             y -= 0.5*cm
         y -= 0.3*cm
 
-    # Sonstiges
-    if sonstiges_text.strip():
-        if y - 2*cm < 2*cm:
-            c.showPage()
-            y = h - 2*cm
-        lines = sonstiges_text.splitlines()
-        box_height = 0.8 + 0.5 * len(lines)
-        # Hintergrund Box
-        c.setFillColor(HexColor("#f0f0f0"))
-        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
-        # Schatten
-        c.setFillColor(HexColor("#d9d9d9"))
-        c.roundRect(2.05*cm, y - box_height*cm - 0.05*cm, w - 4.1*cm, box_height*cm, 6, fill=True, stroke=False)
-        # Überschrift
-        c.setFont("Helvetica-Bold",12)
-        c.setFillColor(HexColor("#0F4C81"))
-        c.drawString(2.2*cm, y - 0.3*cm, "Sonstiges / Bemerkungen")
-        y -= 0.8*cm
-        # Text
-        c.setFont("Helvetica",10)
-        for line in lines:
-            if y < 2*cm:
-                c.showPage()
-                y = h - 2*cm
-            c.drawString(2.4*cm, y, f"- {line}")
-            y -= 0.5*cm
-        y -= 0.3*cm
-
-    # Bilder
+    # BILDER
     if bilder:
         c.showPage()
         y = h - 2*cm
@@ -267,47 +222,32 @@ def create_pdf():
         c.setFillColor(HexColor("#0F4C81"))
         c.drawString(2*cm,y,"Schadenbilder")
         y -= 1*cm
-        x_start = 2*cm
-        x = x_start
-        max_height = 6*cm
-        spacing = 1*cm
         for img_file in bilder:
             img = Image.open(img_file).convert("RGB")
             img_path = os.path.join(tmp,img_file.name)
             img.save(img_path)
-            if y - max_height < 2*cm:
+            if y < 7*cm:
                 c.showPage()
                 y = h - 2*cm
-                x = x_start
-            c.drawImage(img_path, x, y - max_height, width=(w-6*cm)/2, height=max_height, preserveAspectRatio=True)
-            if x == x_start:
-                x += (w-6*cm)/2 + spacing
-            else:
-                x = x_start
-                y -= max_height + spacing
+            c.drawImage(img_path,2*cm,y-6*cm,width=w-4*cm,height=6*cm,preserveAspectRatio=True)
+            y -= 7*cm
 
-    # Unterschriften
+    # UNTERSCHRIFTEN
     c.showPage()
     c.setFont("Helvetica-Bold",12)
-    c.setFillColor(HexColor("#0F4C81"))
-    c.drawString(2*cm, h-3*cm, "Unterschriften")
-    c.drawImage(ks, 2*cm, h-7*cm, width=6*cm, height=3*cm)
-    c.drawImage(fs, 10*cm, h-7*cm, width=6*cm, height=3*cm)
+    c.setFillColorRGB(0,0,0)
+    c.drawString(2*cm,h-3*cm,"Unterschriften:")
+
+    c.drawImage(ks,2*cm,h-7*cm,width=6*cm,height=3*cm)
+    c.setFont("Helvetica",10)
+    c.drawCentredString(5*cm,h-7.6*cm,f"Kunde: {kunde}")
+    c.drawCentredString(5*cm,h-8.2*cm,zeit)
+
+    c.drawImage(fs,10*cm,h-7*cm,width=6*cm,height=3*cm)
+    c.drawCentredString(13*cm,h-7.6*cm,f"Fahrer: {fahrer}")
+    c.drawCentredString(13*cm,h-8.2*cm,zeit)
+
     c.save()
 
-    return pdf_path
-
-# =============================
-# PDF BUTTON
-# =============================
-if st.button("📄 Schadenprotokoll erstellen"):
-    if not kunde or not fahrer:
-        st.error("Bitte Kunden- UND Fahrernamen eingeben")
-        st.stop()
-    
-    pdf_path = create_pdf()
-    
     with open(pdf_path,"rb") as f:
-        st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
-
-
+        st.download_button("⬇️ PDF herunterladen",f,file_name="Schadenprotokoll.pdf")
