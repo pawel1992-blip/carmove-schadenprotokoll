@@ -130,7 +130,7 @@ def save_signature(canvas_result, path):
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
-# PDF GENERIEREN – MODERNES DESIGN BEIBEHALTEN
+# PDF GENERIEREN – MODERNES DESIGN, GRAUE BOXEN OPTIMAL
 # =============================
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
     if not kunde or not fahrer:
@@ -174,22 +174,25 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     c.drawString(2.2*cm, y, f"Auftrag: {auftrag}")
     y -= 1*cm
 
-    # Schäden mit moderner Gestaltung
+    # Schäden
     for bereich, punkte in schadenpunkte.items():
         checked_punkte = [p for p in punkte if checkbox_vars[p]]
         if not checked_punkte:
             continue
 
-        box_height = 0.8 + 0.5 * len(checked_punkte)
-        if y - box_height*cm < 2*cm:
+        # Höhe der Box genau an die Anzahl der Punkte anpassen
+        box_height_cm = 0.8 + 0.5 * len(checked_punkte)
+
+        if y - box_height_cm*cm < 2*cm:
             c.showPage()
             y = h - 2*cm
 
-        # Schatten und Box
+        # Schatten
         c.setFillColor(HexColor("#e0e0e0"))
-        c.roundRect(2.05*cm, y - box_height*cm - 0.05*cm, w - 4.1*cm, box_height*cm, 8, fill=True, stroke=False)
+        c.roundRect(2.05*cm, y - box_height_cm*cm - 0.05*cm, w - 4.1*cm, box_height_cm*cm, 8, fill=True, stroke=False)
+        # Box
         c.setFillColor(HexColor("#f9f9f9"))
-        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 8, fill=True, stroke=False)
+        c.roundRect(2*cm, y - box_height_cm*cm, w - 4*cm, box_height_cm*cm, 8, fill=True, stroke=False)
 
         # Überschrift
         c.setFont("Helvetica-Bold",12)
