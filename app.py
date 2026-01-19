@@ -120,29 +120,17 @@ st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
     st.markdown("**Kunde**")
-    sign_kunde = st_canvas(
-        height=180,
-        width=400,
-        background_color="white",
-        key="kunde",
-        stroke_width=2,  # dünnere Striche
-    )
+    sign_kunde = st_canvas(height=180, width=400, background_color="white", key="kunde")
 with c2:
     st.markdown("**Fahrer**")
-    sign_fahrer = st_canvas(
-        height=180,
-        width=400,
-        background_color="white",
-        key="fahrer",
-        stroke_width=2,  # dünnere Striche
-    )
+    sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer")
 
 def save_signature(canvas_result, path):
     if canvas_result and canvas_result.image_data is not None:
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
-# PDF GENERIEREN
+# PDF GENERIEREN – MODERNES DESIGN, GRAUE BOXEN OPTIMAL
 # =============================
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
     if not kunde or not fahrer:
@@ -163,58 +151,67 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     y = h - 2*cm
 
     # HEADER
-    c.setFont("Helvetica-Bold",18)
     c.setFillColor(HexColor("#0F4C81"))
-    c.drawString(2*cm,y,"Schadenprotokoll – CarMoveServices")
-    y -= 2*cm
+    c.rect(0, h-3*cm, w, 3*cm, fill=True, stroke=False)
+    c.setFillColor(HexColor("#FFFFFF"))
+    c.setFont("Helvetica-Bold",24)
+    c.drawString(2*cm, h-2*cm, "🚗 CarMoveServices")
+    c.setFont("Helvetica",12)
+    c.drawString(2*cm, h-2.7*cm, f"Schadenprotokoll – {protokoll_datum.strftime('%d.%m.%Y')}")
+    y = h - 4*cm
 
-    c.setFont("Helvetica",11)
-    c.setFillColorRGB(0,0,0)
-    c.drawString(2*cm,y,f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
-    y -= 0.6*cm
-    c.drawString(2*cm,y,f"Kunde: {kunde}")
-    y -= 0.6*cm
-    c.drawString(2*cm,y,f"Fahrer: {fahrer}")
-    y -= 0.6*cm
-    c.drawString(2*cm,y,f"Auftrag: {auftrag}")
+    # Kundendaten
+    c.setFont("Helvetica-Bold",12)
+    c.setFillColor(HexColor("#0F4C81"))
+    c.drawString(2*cm, y, "Kundendaten")
+    y -= 0.7*cm
+    c.setFont("Helvetica",10)
+    c.setFillColor(HexColor("#000000"))
+    c.drawString(2.2*cm, y, f"Kunde: {kunde}")
+    y -= 0.5*cm
+    c.drawString(2.2*cm, y, f"Fahrer: {fahrer}")
+    y -= 0.5*cm
+    c.drawString(2.2*cm, y, f"Auftrag: {auftrag}")
     y -= 1*cm
 
-    # SCHÄDEN MIT ABGERUNDETEN BOXEN UND SCHATTEN
+    # Schäden
     for bereich, punkte in schadenpunkte.items():
         checked_punkte = [p for p in punkte if checkbox_vars[p]]
         if not checked_punkte:
             continue
 
-        box_height = 0.8 + 0.5*len(checked_punkte)
-        if y - box_height*cm < 2*cm:
+        # Höhe der Box genau an die Anzahl der Punkte anpassen
+        box_height_cm = 0.8 + 0.5 * len(checked_punkte)
+
+        if y - box_height_cm*cm < 2*cm:
             c.showPage()
             y = h - 2*cm
 
         # Schatten
-        c.setFillColor(HexColor("#d9d9d9"))
-        c.roundRect(2.1*cm, y - box_height*cm - 0.1*cm, w - 4.2*cm, box_height*cm, 6, fill=True, stroke=False)
+        c.setFillColor(HexColor("#e0e0e0"))
+        c.roundRect(2.05*cm, y - box_height_cm*cm - 0.05*cm, w - 4.1*cm, box_height_cm*cm, 8, fill=True, stroke=False)
         # Box
-        c.setFillColor(HexColor("#f0f0f0"))
-        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
+        c.setFillColor(HexColor("#f9f9f9"))
+        c.roundRect(2*cm, y - box_height_cm*cm, w - 4*cm, box_height_cm*cm, 8, fill=True, stroke=False)
 
         # Überschrift
         c.setFont("Helvetica-Bold",12)
         c.setFillColor(HexColor("#0F4C81"))
-        c.drawString(2.2*cm, y, bereich)
+        c.drawString(2.3*cm, y - 0.3*cm, bereich)
         y -= 0.8*cm
 
-        # Punkte
+        # Angekreuzte Punkte
         c.setFont("Helvetica",10)
-        c.setFillColorRGB(0,0,0)
         for punkt in checked_punkte:
             if y < 2*cm:
                 c.showPage()
                 y = h - 2*cm
-            c.drawString(2.4*cm, y, f"- {punkt}")
+            c.setFillColor(HexColor("#FF6B6B"))
+            c.drawString(2.5*cm, y, f"- {punkt}")
             y -= 0.5*cm
         y -= 0.3*cm
 
-    # BILDER
+    # Bilder
     if bilder:
         c.showPage()
         y = h - 2*cm
@@ -222,32 +219,37 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         c.setFillColor(HexColor("#0F4C81"))
         c.drawString(2*cm,y,"Schadenbilder")
         y -= 1*cm
+        x_start = 2*cm
+        x = x_start
+        max_height = 6*cm
+        spacing = 1*cm
         for img_file in bilder:
             img = Image.open(img_file).convert("RGB")
             img_path = os.path.join(tmp,img_file.name)
             img.save(img_path)
-            if y < 7*cm:
+            if y - max_height < 2*cm:
                 c.showPage()
                 y = h - 2*cm
-            c.drawImage(img_path,2*cm,y-6*cm,width=w-4*cm,height=6*cm,preserveAspectRatio=True)
-            y -= 7*cm
+                x = x_start
+            c.drawImage(img_path, x, y - max_height, width=(w-6*cm)/2, height=max_height, preserveAspectRatio=True)
+            if x == x_start:
+                x += (w-6*cm)/2 + spacing
+            else:
+                x = x_start
+                y -= max_height + spacing
 
-    # UNTERSCHRIFTEN
+    # Unterschriften
     c.showPage()
     c.setFont("Helvetica-Bold",12)
-    c.setFillColorRGB(0,0,0)
-    c.drawString(2*cm,h-3*cm,"Unterschriften:")
-
-    c.drawImage(ks,2*cm,h-7*cm,width=6*cm,height=3*cm)
-    c.setFont("Helvetica",10)
+    c.setFillColor(HexColor("#0F4C81"))
+    c.drawString(2*cm,h-3*cm,"Unterschriften")
+    c.drawImage(ks, 2*cm, h-7*cm, width=6*cm, height=3*cm)
     c.drawCentredString(5*cm,h-7.6*cm,f"Kunde: {kunde}")
     c.drawCentredString(5*cm,h-8.2*cm,zeit)
-
-    c.drawImage(fs,10*cm,h-7*cm,width=6*cm,height=3*cm)
+    c.drawImage(fs, 10*cm, h-7*cm, width=6*cm, height=3*cm)
     c.drawCentredString(13*cm,h-7.6*cm,f"Fahrer: {fahrer}")
     c.drawCentredString(13*cm,h-8.2*cm,zeit)
-
     c.save()
 
     with open(pdf_path,"rb") as f:
-        st.download_button("⬇️ PDF herunterladen",f,file_name="Schadenprotokoll.pdf")
+        st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
