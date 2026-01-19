@@ -18,7 +18,6 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user = ""
 
-# Wenn noch nicht eingeloggt
 if not st.session_state.logged_in:
     st.title("🔐 Login – CarMoveServices")
     username = st.text_input("Benutzername")
@@ -29,12 +28,15 @@ if not st.session_state.logged_in:
         if username in USERS and USERS[username] == password:
             st.session_state.logged_in = True
             st.session_state.user = username
-            st.experimental_rerun()
+            st.experimental_rerun()  # rerun nach erfolgreichem Login
         else:
             st.error("Falsche Zugangsdaten")
-    st.stop()  # App stoppen, bis Login erfolgreich
+    else:
+        st.stop()  # Stoppe alles, bis Login gedrückt wird
 
+# =============================
 # Sidebar Logout
+# =============================
 with st.sidebar:
     st.markdown(f"**👤 Eingeloggt als:** {st.session_state.user}")
     if st.button("🚪 Logout"):
@@ -292,7 +294,9 @@ def create_pdf():
     c.setFillColor(HexColor("#0F4C81"))
     c.drawString(2*cm, h-3*cm, "Unterschriften")
     c.drawImage(ks, 2*cm, h-7*cm, width=6*cm, height=3*cm)
+    c.drawCentredString(5*cm,h-7.6*cm,f"Kunde: {kunde}")
     c.drawImage(fs, 10*cm, h-7*cm, width=6*cm, height=3*cm)
+    c.drawCentredString(13*cm,h-7.6*cm,f"Fahrer: {fahrer}")
     c.save()
 
     return pdf_path
