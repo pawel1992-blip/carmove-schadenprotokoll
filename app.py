@@ -42,53 +42,63 @@ with st.sidebar:
         st.experimental_rerun()
 
 # =============================
-# SCHADENPUNKTE
+# SCHADENPUNKTE + Farben & Icons
 # =============================
 schadenpunkte = {
     "Außen – Front": [
-        "Frontstoßstange beschädigt", "Frontstoßstange gerissen", "Frontstoßstange lackbeschädigt",
-        "Motorhaube beschädigt", "Motorhaube verbeult", "Motorhaube lackbeschädigt",
-        "Steinschlag Windschutzscheibe", "Riss Windschutzscheibe",
-        "Scheinwerfer beschädigt", "Scheinwerfer blind",
-        "Nebelscheinwerfer beschädigt", "Kühlergrill beschädigt"
+        ("Frontstoßstange beschädigt","🚗"), ("Frontstoßstange gerissen","🚗"), ("Frontstoßstange lackbeschädigt","🚗"),
+        ("Motorhaube beschädigt","🚗"), ("Motorhaube verbeult","🚗"), ("Motorhaube lackbeschädigt","🚗"),
+        ("Steinschlag Windschutzscheibe","🪟"), ("Riss Windschutzscheibe","🪟"),
+        ("Scheinwerfer beschädigt","💡"), ("Scheinwerfer blind","💡"),
+        ("Nebelscheinwerfer beschädigt","💡"), ("Kühlergrill beschädigt","🔧")
     ],
     "Außen – Seite links": [
-        "Kratzer Tür vorne links", "Delle Tür vorne links", "Lackschaden Tür vorne links",
-        "Kratzer Tür hinten links", "Delle Tür hinten links", "Lackschaden Tür hinten links",
-        "Kotflügel vorne links beschädigt", "Seitenschweller links beschädigt",
-        "Außenspiegel links beschädigt", "Felgenschaden vorne links",
-        "Felgenschaden hinten links", "Reifen beschädigt links"
+        ("Kratzer Tür vorne links","🚗"), ("Delle Tür vorne links","🚗"), ("Lackschaden Tür vorne links","🚗"),
+        ("Kratzer Tür hinten links","🚗"), ("Delle Tür hinten links","🚗"), ("Lackschaden Tür hinten links","🚗"),
+        ("Kotflügel vorne links beschädigt","🚗"), ("Seitenschweller links beschädigt","🚗"),
+        ("Außenspiegel links beschädigt","🚗"), ("Felgenschaden vorne links","⚙️"),
+        ("Felgenschaden hinten links","⚙️"), ("Reifen beschädigt links","⚙️")
     ],
     "Außen – Seite rechts": [
-        "Kratzer Tür vorne rechts", "Delle Tür vorne rechts", "Lackschaden Tür vorne rechts",
-        "Kratzer Tür hinten rechts", "Delle Tür hinten rechts", "Lackschaden Tür hinten rechts",
-        "Kotflügel vorne rechts beschädigt", "Seitenschweller rechts beschädigt",
-        "Außenspiegel rechts beschädigt", "Felgenschaden vorne rechts",
-        "Felgenschaden hinten rechts", "Reifen beschädigt rechts"
+        ("Kratzer Tür vorne rechts","🚗"), ("Delle Tür vorne rechts","🚗"), ("Lackschaden Tür vorne rechts","🚗"),
+        ("Kratzer Tür hinten rechts","🚗"), ("Delle Tür hinten rechts","🚗"), ("Lackschaden Tür hinten rechts","🚗"),
+        ("Kotflügel vorne rechts beschädigt","🚗"), ("Seitenschweller rechts beschädigt","🚗"),
+        ("Außenspiegel rechts beschädigt","🚗"), ("Felgenschaden vorne rechts","⚙️"),
+        ("Felgenschaden hinten rechts","⚙️"), ("Reifen beschädigt rechts","⚙️")
     ],
     "Außen – Heck": [
-        "Heckstoßstange beschädigt", "Heckstoßstange gerissen", "Heckstoßstange lackbeschädigt",
-        "Kofferraumdeckel beschädigt", "Kofferraumdeckel verbeult",
-        "Rückleuchte links beschädigt", "Rückleuchte rechts beschädigt",
-        "Kennzeichenhalter beschädigt", "Auspuff beschädigt"
+        ("Heckstoßstange beschädigt","🚗"), ("Heckstoßstange gerissen","🚗"), ("Heckstoßstange lackbeschädigt","🚗"),
+        ("Kofferraumdeckel beschädigt","🚗"), ("Kofferraumdeckel verbeult","🚗"),
+        ("Rückleuchte links beschädigt","💡"), ("Rückleuchte rechts beschädigt","💡"),
+        ("Kennzeichenhalter beschädigt","🔧"), ("Auspuff beschädigt","🔧")
     ],
     "Dach & Glas": [
-        "Dach beschädigt", "Dach verkratzt", "Dachantenne beschädigt",
-        "Panoramadach beschädigt",
-        "Seitenscheibe vorne links beschädigt", "Seitenscheibe vorne rechts beschädigt",
-        "Seitenscheibe hinten links beschädigt", "Seitenscheibe hinten rechts beschädigt"
+        ("Dach beschädigt","🏠"), ("Dach verkratzt","🏠"), ("Dachantenne beschädigt","📡"),
+        ("Panoramadach beschädigt","🏠"),
+        ("Seitenscheibe vorne links beschädigt","🪟"), ("Seitenscheibe vorne rechts beschädigt","🪟"),
+        ("Seitenscheibe hinten links beschädigt","🪟"), ("Seitenscheibe hinten rechts beschädigt","🪟")
     ],
     "Innenraum": [
-        "Fahrersitz beschädigt", "Beifahrersitz beschädigt", "Rücksitzbank beschädigt",
-        "Armaturenbrett beschädigt", "Lenkrad beschädigt", "Schaltknauf beschädigt",
-        "Innenverkleidung beschädigt", "Teppichboden beschädigt",
-        "Dachhimmel beschädigt", "Geruchsbelästigung", "Warnleuchte aktiv"
+        ("Fahrersitz beschädigt","🪑"), ("Beifahrersitz beschädigt","🪑"), ("Rücksitzbank beschädigt","🪑"),
+        ("Armaturenbrett beschädigt","🎛️"), ("Lenkrad beschädigt","🎛️"), ("Schaltknauf beschädigt","🎛️"),
+        ("Innenverkleidung beschädigt","🪑"), ("Teppichboden beschädigt","🪑"),
+        ("Dachhimmel beschädigt","🪑"), ("Geruchsbelästigung","👃"), ("Warnleuchte aktiv","⚠️")
     ],
     "Technik / Sonstiges": [
-        "Motor startet nicht", "Getriebeproblem", "Bremsen auffällig",
-        "Lenkung auffällig", "Reifendruckwarnung aktiv",
-        "Batterie schwach", "Fehlermeldung Bordcomputer"
+        ("Motor startet nicht","🔧"), ("Getriebeproblem","🔧"), ("Bremsen auffällig","⚠️"),
+        ("Lenkung auffällig","⚠️"), ("Reifendruckwarnung aktiv","⚠️"),
+        ("Batterie schwach","🔋"), ("Fehlermeldung Bordcomputer","💻")
     ]
+}
+
+farben = {
+    "Außen – Front": "#FFD700",
+    "Außen – Seite links": "#FF7F50",
+    "Außen – Seite rechts": "#1E90FF",
+    "Außen – Heck": "#32CD32",
+    "Dach & Glas": "#8A2BE2",
+    "Innenraum": "#FF69B4",
+    "Technik / Sonstiges": "#FF4500"
 }
 
 # =============================
@@ -108,23 +118,8 @@ st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 for bereich, punkte in schadenpunkte.items():
     with st.expander(bereich, expanded=False):
-        st.markdown(
-            f"""
-            <div style="
-                background-color:#f5f7fa;
-                padding:12px 16px;
-                border-radius:12px;
-                box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-                margin-bottom:10px;">
-                <h4 style='color:#0F4C81; margin-bottom:8px;'>{bereich}</h4>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        cols = st.columns(2)
-        for i, punkt in enumerate(punkte):
-            col = cols[i % 2]
-            checkbox_vars[punkt] = col.checkbox(punkt)
+        for punkt, icon in punkte:
+            checkbox_vars[punkt] = st.checkbox(f"{icon} {punkt}")
 
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader("Fotos aufnehmen oder hochladen", type=["jpg","jpeg","png"], accept_multiple_files=True)
@@ -143,7 +138,7 @@ def save_signature(canvas_result, path):
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
-# PDF GENERIEREN – NUR ANGEKREUZTE SCHÄDEN
+# MODERN PDF EXPORT
 # =============================
 if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
     if not kunde or not fahrer:
@@ -158,7 +153,7 @@ if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
     save_signature(sign_kunde, ks)
     save_signature(sign_fahrer, fs)
 
-    pdf_path = os.path.join(tmp, "Schadenprotokoll_Modern.pdf")
+    pdf_path = os.path.join(tmp, "Schadenprotokoll_Modern_App.pdf")
     c = pdf_canvas.Canvas(pdf_path, pagesize=A4)
     w, h = A4
     y = h - 2*cm
@@ -187,9 +182,9 @@ if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
     c.drawString(2.2*cm, y, f"Auftrag: {auftrag}")
     y -= 1*cm
 
-    # Schäden
+    # Schäden nach Kategorie
     for bereich, punkte in schadenpunkte.items():
-        checked_punkte = [p for p in punkte if checkbox_vars[p]]
+        checked_punkte = [(p, i) for p, i in punkte if checkbox_vars[p]]
         if not checked_punkte:
             continue
 
@@ -198,27 +193,23 @@ if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
             c.showPage()
             y = h - 2*cm
 
-        # Hintergrund Box
-        c.setFillColor(HexColor("#f9f9f9"))
-        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 8, fill=True, stroke=False)
-        # Schatten
-        c.setFillColor(HexColor("#e0e0e0"))
-        c.roundRect(2.05*cm, y - box_height*cm - 0.05*cm, w - 4.1*cm, box_height*cm, 8, fill=True, stroke=False)
-
+        # Box Hintergrund mit Farbe der Kategorie
+        c.setFillColor(HexColor(farben[bereich]))
+        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 10, fill=True, stroke=False)
         # Überschrift
         c.setFont("Helvetica-Bold",12)
-        c.setFillColor(HexColor("#0F4C81"))
+        c.setFillColor(HexColor("#FFFFFF"))
         c.drawString(2.3*cm, y - 0.3*cm, bereich)
         y -= 0.8*cm
 
-        # Angekreuzte Punkte
+        # Punkte
         c.setFont("Helvetica",10)
-        for punkt in checked_punkte:
+        for punkt, icon in checked_punkte:
             if y < 2*cm:
                 c.showPage()
                 y = h - 2*cm
-            c.setFillColor(HexColor("#FF6B6B"))
-            c.drawString(2.5*cm, y, f"- {punkt}")
+            c.setFillColor(HexColor("#FFFFFF"))
+            c.drawString(2.5*cm, y, f"{icon} {punkt}")
             y -= 0.5*cm
         y -= 0.3*cm
 
@@ -263,4 +254,4 @@ if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
     c.save()
 
     with open(pdf_path,"rb") as f:
-        st.download_button("⬇️ Modernes PDF herunterladen", f, file_name="Schadenprotokoll_Modern.pdf")
+        st.download_button("⬇️ Modernes PDF herunterladen", f, file_name="Schadenprotokoll_Modern_App.pdf")
