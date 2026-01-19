@@ -14,27 +14,25 @@ from datetime import date, datetime
 # =============================
 USERS = {"admin": "2804CarM", "fahrer": "carmove"}
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-    st.session_state.user = ""
+def login():
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
 
-if not st.session_state.logged_in:
-    st.title("🔐 Login – CarMoveServices")
-    username = st.text_input("Benutzername")
-    password = st.text_input("Passwort", type="password")
-    login_pressed = st.button("Login")
-    if login_pressed:
-        if username in USERS and USERS[username] == password:
-            st.session_state.logged_in = True
-            st.session_state.user = username
-            st.success("Erfolgreich eingeloggt!")
-        else:
-            st.error("Falsche Zugangsdaten")
-    st.stop()
+    if not st.session_state.logged_in:
+        st.title("🔐 Login – CarMoveServices")
+        username = st.text_input("Benutzername")
+        password = st.text_input("Passwort", type="password")
+        if st.button("Login"):
+            if username in USERS and USERS[username] == password:
+                st.session_state.logged_in = True
+                st.session_state.user = username
+                st.experimental_rerun()
+            else:
+                st.error("Falsche Zugangsdaten")
+        st.stop()
 
-# =============================
-# Sidebar Logout
-# =============================
+login()
+
 with st.sidebar:
     st.markdown(f"**👤 Eingeloggt als:** {st.session_state.user}")
     if st.button("🚪 Logout"):
@@ -42,63 +40,53 @@ with st.sidebar:
         st.experimental_rerun()
 
 # =============================
-# SCHADENPUNKTE + Farben & Icons
+# SCHADENPUNKTE
 # =============================
 schadenpunkte = {
     "Außen – Front": [
-        ("Frontstoßstange beschädigt","🚗"), ("Frontstoßstange gerissen","🚗"), ("Frontstoßstange lackbeschädigt","🚗"),
-        ("Motorhaube beschädigt","🚗"), ("Motorhaube verbeult","🚗"), ("Motorhaube lackbeschädigt","🚗"),
-        ("Steinschlag Windschutzscheibe","🪟"), ("Riss Windschutzscheibe","🪟"),
-        ("Scheinwerfer beschädigt","💡"), ("Scheinwerfer blind","💡"),
-        ("Nebelscheinwerfer beschädigt","💡"), ("Kühlergrill beschädigt","🔧")
+        "Frontstoßstange beschädigt", "Frontstoßstange gerissen", "Frontstoßstange lackbeschädigt",
+        "Motorhaube beschädigt", "Motorhaube verbeult", "Motorhaube lackbeschädigt",
+        "Steinschlag Windschutzscheibe", "Riss Windschutzscheibe",
+        "Scheinwerfer beschädigt", "Scheinwerfer blind",
+        "Nebelscheinwerfer beschädigt", "Kühlergrill beschädigt"
     ],
     "Außen – Seite links": [
-        ("Kratzer Tür vorne links","🚗"), ("Delle Tür vorne links","🚗"), ("Lackschaden Tür vorne links","🚗"),
-        ("Kratzer Tür hinten links","🚗"), ("Delle Tür hinten links","🚗"), ("Lackschaden Tür hinten links","🚗"),
-        ("Kotflügel vorne links beschädigt","🚗"), ("Seitenschweller links beschädigt","🚗"),
-        ("Außenspiegel links beschädigt","🚗"), ("Felgenschaden vorne links","⚙️"),
-        ("Felgenschaden hinten links","⚙️"), ("Reifen beschädigt links","⚙️")
+        "Kratzer Tür vorne links", "Delle Tür vorne links", "Lackschaden Tür vorne links",
+        "Kratzer Tür hinten links", "Delle Tür hinten links", "Lackschaden Tür hinten links",
+        "Kotflügel vorne links beschädigt", "Seitenschweller links beschädigt",
+        "Außenspiegel links beschädigt", "Felgenschaden vorne links",
+        "Felgenschaden hinten links", "Reifen beschädigt links"
     ],
     "Außen – Seite rechts": [
-        ("Kratzer Tür vorne rechts","🚗"), ("Delle Tür vorne rechts","🚗"), ("Lackschaden Tür vorne rechts","🚗"),
-        ("Kratzer Tür hinten rechts","🚗"), ("Delle Tür hinten rechts","🚗"), ("Lackschaden Tür hinten rechts","🚗"),
-        ("Kotflügel vorne rechts beschädigt","🚗"), ("Seitenschweller rechts beschädigt","🚗"),
-        ("Außenspiegel rechts beschädigt","🚗"), ("Felgenschaden vorne rechts","⚙️"),
-        ("Felgenschaden hinten rechts","⚙️"), ("Reifen beschädigt rechts","⚙️")
+        "Kratzer Tür vorne rechts", "Delle Tür vorne rechts", "Lackschaden Tür vorne rechts",
+        "Kratzer Tür hinten rechts", "Delle Tür hinten rechts", "Lackschaden Tür hinten rechts",
+        "Kotflügel vorne rechts beschädigt", "Seitenschweller rechts beschädigt",
+        "Außenspiegel rechts beschädigt", "Felgenschaden vorne rechts",
+        "Felgenschaden hinten rechts", "Reifen beschädigt rechts"
     ],
     "Außen – Heck": [
-        ("Heckstoßstange beschädigt","🚗"), ("Heckstoßstange gerissen","🚗"), ("Heckstoßstange lackbeschädigt","🚗"),
-        ("Kofferraumdeckel beschädigt","🚗"), ("Kofferraumdeckel verbeult","🚗"),
-        ("Rückleuchte links beschädigt","💡"), ("Rückleuchte rechts beschädigt","💡"),
-        ("Kennzeichenhalter beschädigt","🔧"), ("Auspuff beschädigt","🔧")
+        "Heckstoßstange beschädigt", "Heckstoßstange gerissen", "Heckstoßstange lackbeschädigt",
+        "Kofferraumdeckel beschädigt", "Kofferraumdeckel verbeult",
+        "Rückleuchte links beschädigt", "Rückleuchte rechts beschädigt",
+        "Kennzeichenhalter beschädigt", "Auspuff beschädigt"
     ],
     "Dach & Glas": [
-        ("Dach beschädigt","🏠"), ("Dach verkratzt","🏠"), ("Dachantenne beschädigt","📡"),
-        ("Panoramadach beschädigt","🏠"),
-        ("Seitenscheibe vorne links beschädigt","🪟"), ("Seitenscheibe vorne rechts beschädigt","🪟"),
-        ("Seitenscheibe hinten links beschädigt","🪟"), ("Seitenscheibe hinten rechts beschädigt","🪟")
+        "Dach beschädigt", "Dach verkratzt", "Dachantenne beschädigt",
+        "Panoramadach beschädigt",
+        "Seitenscheibe vorne links beschädigt", "Seitenscheibe vorne rechts beschädigt",
+        "Seitenscheibe hinten links beschädigt", "Seitenscheibe hinten rechts beschädigt"
     ],
     "Innenraum": [
-        ("Fahrersitz beschädigt","🪑"), ("Beifahrersitz beschädigt","🪑"), ("Rücksitzbank beschädigt","🪑"),
-        ("Armaturenbrett beschädigt","🎛️"), ("Lenkrad beschädigt","🎛️"), ("Schaltknauf beschädigt","🎛️"),
-        ("Innenverkleidung beschädigt","🪑"), ("Teppichboden beschädigt","🪑"),
-        ("Dachhimmel beschädigt","🪑"), ("Geruchsbelästigung","👃"), ("Warnleuchte aktiv","⚠️")
+        "Fahrersitz beschädigt", "Beifahrersitz beschädigt", "Rücksitzbank beschädigt",
+        "Armaturenbrett beschädigt", "Lenkrad beschädigt", "Schaltknauf beschädigt",
+        "Innenverkleidung beschädigt", "Teppichboden beschädigt",
+        "Dachhimmel beschädigt", "Geruchsbelästigung", "Warnleuchte aktiv"
     ],
     "Technik / Sonstiges": [
-        ("Motor startet nicht","🔧"), ("Getriebeproblem","🔧"), ("Bremsen auffällig","⚠️"),
-        ("Lenkung auffällig","⚠️"), ("Reifendruckwarnung aktiv","⚠️"),
-        ("Batterie schwach","🔋"), ("Fehlermeldung Bordcomputer","💻")
+        "Motor startet nicht", "Getriebeproblem", "Bremsen auffällig",
+        "Lenkung auffällig", "Reifendruckwarnung aktiv",
+        "Batterie schwach", "Fehlermeldung Bordcomputer"
     ]
-}
-
-farben = {
-    "Außen – Front": "#FFD700",
-    "Außen – Seite links": "#FF7F50",
-    "Außen – Seite rechts": "#1E90FF",
-    "Außen – Heck": "#32CD32",
-    "Dach & Glas": "#8A2BE2",
-    "Innenraum": "#FF69B4",
-    "Technik / Sonstiges": "#FF4500"
 }
 
 # =============================
@@ -117,9 +105,9 @@ with col2:
 st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 for bereich, punkte in schadenpunkte.items():
-    with st.expander(bereich, expanded=False):
-        for punkt, icon in punkte:
-            checkbox_vars[punkt] = st.checkbox(f"{icon} {punkt}")
+    with st.expander(bereich):
+        for punkt in punkte:
+            checkbox_vars[punkt] = st.checkbox(punkt)
 
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader("Fotos aufnehmen oder hochladen", type=["jpg","jpeg","png"], accept_multiple_files=True)
@@ -134,13 +122,13 @@ with c2:
     sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer")
 
 def save_signature(canvas_result, path):
-    if canvas_result and canvas_result.image_data is not None:
+    if canvas_result.image_data is not None:
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
-# MODERN PDF EXPORT
+# PDF GENERIEREN
 # =============================
-if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
+if st.button("📄 Schadenprotokoll als PDF erstellen"):
     if not kunde or not fahrer:
         st.error("Bitte Kunden- UND Fahrernamen eingeben")
         st.stop()
@@ -153,67 +141,61 @@ if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
     save_signature(sign_kunde, ks)
     save_signature(sign_fahrer, fs)
 
-    pdf_path = os.path.join(tmp, "Schadenprotokoll_Modern_App.pdf")
+    pdf_path = os.path.join(tmp, "Schadenprotokoll.pdf")
     c = pdf_canvas.Canvas(pdf_path, pagesize=A4)
     w, h = A4
     y = h - 2*cm
 
     # HEADER
+    c.setFont("Helvetica-Bold",18)
     c.setFillColor(HexColor("#0F4C81"))
-    c.rect(0, h-3*cm, w, 3*cm, fill=True, stroke=False)
-    c.setFillColor(HexColor("#FFFFFF"))
-    c.setFont("Helvetica-Bold",24)
-    c.drawString(2*cm, h-2*cm, "🚗 CarMoveServices")
-    c.setFont("Helvetica",12)
-    c.drawString(2*cm, h-2.7*cm, f"Schadenprotokoll – {protokoll_datum.strftime('%d.%m.%Y')}")
-    y = h - 4*cm
+    c.drawString(2*cm,y,"Schadenprotokoll – CarMoveServices")
+    y -= 2*cm
 
-    # Kundendaten
-    c.setFont("Helvetica-Bold",12)
-    c.setFillColor(HexColor("#0F4C81"))
-    c.drawString(2*cm, y, "Kundendaten")
-    y -= 0.7*cm
-    c.setFont("Helvetica",10)
-    c.setFillColor(HexColor("#000000"))
-    c.drawString(2.2*cm, y, f"Kunde: {kunde}")
-    y -= 0.5*cm
-    c.drawString(2.2*cm, y, f"Fahrer: {fahrer}")
-    y -= 0.5*cm
-    c.drawString(2.2*cm, y, f"Auftrag: {auftrag}")
+    c.setFont("Helvetica",11)
+    c.setFillColorRGB(0,0,0)
+    c.drawString(2*cm,y,f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
+    y -= 0.6*cm
+    c.drawString(2*cm,y,f"Kunde: {kunde}")
+    y -= 0.6*cm
+    c.drawString(2*cm,y,f"Fahrer: {fahrer}")
+    y -= 0.6*cm
+    c.drawString(2*cm,y,f"Auftrag: {auftrag}")
     y -= 1*cm
 
-    # Schäden nach Kategorie
+    # SCHÄDEN MIT GRAUEM HINTERGRUND
     for bereich, punkte in schadenpunkte.items():
-        checked_punkte = [(p, i) for p, i in punkte if checkbox_vars[p]]
-        if not checked_punkte:
+        checked = [p for p in punkte if checkbox_vars[p]]
+        if not checked:
             continue
 
-        box_height = 0.8 + 0.5 * len(checked_punkte)
+        box_height = 0.8 + 0.5*len(checked)
         if y - box_height*cm < 2*cm:
             c.showPage()
             y = h - 2*cm
 
-        # Box Hintergrund mit Farbe der Kategorie
-        c.setFillColor(HexColor(farben[bereich]))
-        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 10, fill=True, stroke=False)
+        # Grauer Hintergrund
+        c.setFillColor(HexColor("#f0f0f0"))
+        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
+
         # Überschrift
         c.setFont("Helvetica-Bold",12)
-        c.setFillColor(HexColor("#FFFFFF"))
-        c.drawString(2.3*cm, y - 0.3*cm, bereich)
+        c.setFillColor(HexColor("#0F4C81"))
+        c.drawString(2.2*cm, y, bereich)
         y -= 0.8*cm
 
         # Punkte
         c.setFont("Helvetica",10)
-        for punkt, icon in checked_punkte:
+        c.setFillColorRGB(0,0,0)
+        for punkt in checked:
             if y < 2*cm:
                 c.showPage()
                 y = h - 2*cm
-            c.setFillColor(HexColor("#FFFFFF"))
-            c.drawString(2.5*cm, y, f"{icon} {punkt}")
+            c.drawString(2.4*cm, y, f"- {punkt}")
             y -= 0.5*cm
         y -= 0.3*cm
 
-    # Bilder
+    # BILDER
     if bilder:
         c.showPage()
         y = h - 2*cm
@@ -221,37 +203,32 @@ if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
         c.setFillColor(HexColor("#0F4C81"))
         c.drawString(2*cm,y,"Schadenbilder")
         y -= 1*cm
-        x_start = 2*cm
-        x = x_start
-        max_height = 6*cm
-        spacing = 1*cm
         for img_file in bilder:
             img = Image.open(img_file).convert("RGB")
             img_path = os.path.join(tmp,img_file.name)
             img.save(img_path)
-            if y - max_height < 2*cm:
+            if y < 7*cm:
                 c.showPage()
                 y = h - 2*cm
-                x = x_start
-            c.drawImage(img_path, x, y - max_height, width=(w-6*cm)/2, height=max_height, preserveAspectRatio=True)
-            if x == x_start:
-                x += (w-6*cm)/2 + spacing
-            else:
-                x = x_start
-                y -= max_height + spacing
+            c.drawImage(img_path,2*cm,y-6*cm,width=w-4*cm,height=6*cm,preserveAspectRatio=True)
+            y -= 7*cm
 
-    # Unterschriften
+    # UNTERSCHRIFTEN
     c.showPage()
     c.setFont("Helvetica-Bold",12)
-    c.setFillColor(HexColor("#0F4C81"))
-    c.drawString(2*cm, h-3*cm, "Unterschriften")
-    c.drawImage(ks, 2*cm, h-7*cm, width=6*cm, height=3*cm)
+    c.setFillColorRGB(0,0,0)
+    c.drawString(2*cm,h-3*cm,"Unterschriften:")
+
+    c.drawImage(ks,2*cm,h-7*cm,width=6*cm,height=3*cm)
+    c.setFont("Helvetica",10)
     c.drawCentredString(5*cm,h-7.6*cm,f"Kunde: {kunde}")
     c.drawCentredString(5*cm,h-8.2*cm,zeit)
-    c.drawImage(fs, 10*cm, h-7*cm, width=6*cm, height=3*cm)
+
+    c.drawImage(fs,10*cm,h-7*cm,width=6*cm,height=3*cm)
     c.drawCentredString(13*cm,h-7.6*cm,f"Fahrer: {fahrer}")
     c.drawCentredString(13*cm,h-8.2*cm,zeit)
+
     c.save()
 
     with open(pdf_path,"rb") as f:
-        st.download_button("⬇️ Modernes PDF herunterladen", f, file_name="Schadenprotokoll_Modern_App.pdf")
+        st.download_button("⬇️ PDF herunterladen",f,file_name="Schadenprotokoll.pdf")
