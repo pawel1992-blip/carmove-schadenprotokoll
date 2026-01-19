@@ -4,15 +4,9 @@ from PIL import Image
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas as pdf_canvas
 from reportlab.lib.units import cm
-from reportlab.lib import colors
 import os
 import tempfile
 from datetime import date, datetime
-
-# =============================
-# PAGE CONFIG
-# =============================
-st.set_page_config(page_title="CarMoveServices Schadenprotokoll", layout="wide")
 
 # =============================
 # LOGIN
@@ -28,12 +22,12 @@ def login():
 
     if not st.session_state.logged_in:
         st.title("🔐 Login – CarMoveServices")
-        u = st.text_input("Benutzername")
-        p = st.text_input("Passwort", type="password")
+        username = st.text_input("Benutzername")
+        password = st.text_input("Passwort", type="password")
         if st.button("Login"):
-            if u in USERS and USERS[u] == p:
+            if username in USERS and USERS[username] == password:
                 st.session_state.logged_in = True
-                st.session_state.user = u
+                st.session_state.user = username
                 st.rerun()
             else:
                 st.error("Falsche Zugangsdaten")
@@ -42,13 +36,13 @@ def login():
 login()
 
 with st.sidebar:
-    st.write(f"👤 Eingeloggt als **{st.session_state.user}**")
+    st.write(f"👤 Eingeloggt als: **{st.session_state.user}**")
     if st.button("🚪 Logout"):
         st.session_state.logged_in = False
         st.rerun()
 
 # =============================
-# SCHADENPUNKTE (VOLL)
+# SCHADENPUNKTE
 # =============================
 schadenpunkte = {
     "Außen – Front": [
@@ -112,10 +106,10 @@ with col2:
 
 st.subheader("🛠️ Schäden")
 checkbox_vars = {}
-for b, p in schadenpunkte.items():
-    with st.expander(b):
-        for s in p:
-            checkbox_vars[s] = st.checkbox(s)
+for bereich, punkte in schadenpunkte.items():
+    with st.expander(bereich):
+        for punkt in punkte:
+            checkbox_vars[punkt] = st.checkbox(punkt)
 
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader(
@@ -136,9 +130,13 @@ def save_signature(canvas_result, path):
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
-# PDF
+# PDF GENERIEREN
 # =============================
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
+    if not kunde or not fahrer:
+        st.error("Bitte Kunden- UND Fahrernamen eingeben")
+        st.stop()
+
     tmp = tempfile.mkdtemp()
     zeit = datetime.now().strftime("%d.%m.%Y %H:%M")
 
@@ -152,30 +150,24 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     w, h = A4
 
     # HEADER
-    c.setFillColor(colors.HexColor("#111827"))
-    c.rect(0, h - 4 * cm, w, 4 * cm, fill=1)
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 22)
-    c.drawString(2 * cm, h - 2.5 * cm, "CarMoveServices")
-    c.setFont("Helvetica", 12)
-    c.drawString(2 * cm, h - 3.3 * cm, "Digitales Schadenprotokoll")
+    c.setFont("Helvetica-Bold", 16)
+    y = h - 2 * cm
+    c.drawString(2 * cm, y, "Schadenprotokoll – CarMoveServices")
+    y -= 1.5 * cm
 
-    # DATEN
-    y = h - 5 * cm
-    c.setFillColor(colors.black)
     c.setFont("Helvetica", 11)
-    c.drawString(2 * cm, y, f"Kunde: {kunde}")
-    y -= 0.6 * cm
-    c.drawString(2 * cm, y, f"Fahrer: {fahrer}")
-    y -= 0.6 * cm
-    c.drawString(2 * cm, y, f"Auftrag: {auftrag}")
-    y -= 0.6 * cm
     c.drawString(2 * cm, y, f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
-
-    # SCHÄDEN (DYNAMISCH)
+    y -= 0.7 * cm
+    c.drawString(2 * cm, y, f"Kunde: {kunde}")
+    y -= 0.7 * cm
+    c.drawString(2 * cm, y, f"Fahrer: {fahrer}")
+    y -= 0.7 * cm
+    c.drawString(2 * cm, y, f"Auftrag: {auftrag}")
     y -= 1 * cm
+
+    # SCHÄDEN
     c.setFont("Helvetica-Bold", 12)
-    c.drawString(2 * cm, y, "Festgestellte Schäden")
+    c.drawString(2 * cm, y, "Festgestellte Schäden:")
     y -= 0.7 * cm
     c.setFont("Helvetica", 10)
 
@@ -185,33 +177,33 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
                 c.showPage()
                 y = h - 2 * cm
                 c.setFont("Helvetica", 10)
-            c.drawString(2.2 * cm, y, f"• {p}")
-            y -= 0.45 * cm
+            c.drawString(2.2 * cm, y, f"- {p}")
+            y -= 0.5 * cm
 
     # BILDER
     if bilder:
         c.showPage()
         y = h - 2 * cm
-        c.setFont("Helvetica-Bold", 14)
+        c.setFont("Helvetica-Bold", 12)
         c.drawString(2 * cm, y, "Schadenbilder")
         y -= 1 * cm
 
-        for up in bilder:
-            img = Image.open(up).convert("RGB")
-            pth = os.path.join(tmp, up.name)
-            img.save(pth)
+        for img_file in bilder:
+            img = Image.open(img_file).convert("RGB")
+            img_path = os.path.join(tmp, img_file.name)
+            img.save(img_path)
 
             if y < 7 * cm:
                 c.showPage()
                 y = h - 2 * cm
 
-            c.drawImage(pth, 2 * cm, y - 6 * cm, width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
+            c.drawImage(img_path, 2 * cm, y - 6 * cm, width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
             y -= 7 * cm
 
     # UNTERSCHRIFTEN
     c.showPage()
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(2 * cm, h - 3 * cm, "Digitale Bestätigung")
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2 * cm, h - 3 * cm, "Unterschriften:")
 
     c.drawImage(ks, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
     c.setFont("Helvetica", 10)
