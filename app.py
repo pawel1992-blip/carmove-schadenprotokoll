@@ -4,6 +4,7 @@ from PIL import Image
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas as pdf_canvas
 from reportlab.lib.units import cm
+from reportlab.lib.colors import HexColor
 import os
 import tempfile
 from datetime import date, datetime
@@ -156,7 +157,7 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
 
     # HEADER
     c.setFont("Helvetica-Bold",18)
-    c.setFillColorRGB(0.06,0.3,0.51)
+    c.setFillColor(HexColor("#0F4C81"))
     c.drawString(2*cm,y,"Schadenprotokoll – CarMoveServices")
     y -= 2*cm
 
@@ -171,19 +172,27 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     c.drawString(2*cm,y,f"Auftrag: {auftrag}")
     y -= 1*cm
 
-    # SCHÄDEN MIT GRAUEN BOXEN
+    # SCHÄDEN MIT ABGERUNDETEN BOXEN UND SCHATTEN
     for bereich, punkte in schadenpunkte.items():
         box_height = 0.8 + 0.5*len(punkte)
         if y - box_height*cm < 2*cm:
             c.showPage()
             y = h - 2*cm
-        c.setFillColorRGB(0.95,0.95,0.95)
-        c.rect(2*cm,y - box_height*cm, w - 4*cm, box_height*cm, fill=True, stroke=False)
+
+        # Schatten
+        c.setFillColor(HexColor("#d9d9d9"))
+        c.roundRect(2.1*cm, y - box_height*cm - 0.1*cm, w - 4.2*cm, box_height*cm, 6, fill=True, stroke=False)
+        # Box
+        c.setFillColor(HexColor("#f0f0f0"))
+        c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
+
         # Überschrift
         c.setFont("Helvetica-Bold",12)
-        c.setFillColorRGB(0.06,0.3,0.51)
+        c.setFillColor(HexColor("#0F4C81"))
         c.drawString(2.2*cm, y, bereich)
         y -= 0.8*cm
+
+        # Punkte
         c.setFont("Helvetica",10)
         c.setFillColorRGB(0,0,0)
         for punkt in punkte:
@@ -200,7 +209,7 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         c.showPage()
         y = h - 2*cm
         c.setFont("Helvetica-Bold",12)
-        c.setFillColorRGB(0.06,0.3,0.51)
+        c.setFillColor(HexColor("#0F4C81"))
         c.drawString(2*cm,y,"Schadenbilder")
         y -= 1*cm
         for img_file in bilder:
