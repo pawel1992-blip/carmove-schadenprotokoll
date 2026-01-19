@@ -130,7 +130,7 @@ def save_signature(canvas_result, path):
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
-# PDF GENERIEREN – MODERNES DESIGN, GRAUE BOXEN OPTIMAL
+# PDF GENERIEREN
 # =============================
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
     if not kunde or not fahrer:
@@ -180,7 +180,6 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         if not checked_punkte:
             continue
 
-        # Höhe der Box genau an die Anzahl der Punkte anpassen
         box_height_cm = 0.8 + 0.5 * len(checked_punkte)
 
         if y - box_height_cm*cm < 2*cm:
@@ -244,6 +243,7 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     c.setFillColor(HexColor("#0F4C81"))
     c.drawString(2*cm,h-3*cm,"Unterschriften")
     c.drawImage(ks, 2*cm, h-7*cm, width=6*cm, height=3*cm)
+    c.setFont("Helvetica",8)  # Schrift kleiner
     c.drawCentredString(5*cm,h-7.6*cm,f"Kunde: {kunde}")
     c.drawCentredString(5*cm,h-8.2*cm,zeit)
     c.drawImage(fs, 10*cm, h-7*cm, width=6*cm, height=3*cm)
