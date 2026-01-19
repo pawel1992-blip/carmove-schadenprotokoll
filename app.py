@@ -120,10 +120,10 @@ st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
     st.markdown("**Kunde**")
-    sign_kunde = st_canvas(height=180, width=400, background_color="white", key="kunde")
+    sign_kunde = st_canvas(height=180, width=400, background_color="white", key="kunde",stroke_width=2,)
 with c2:
     st.markdown("**Fahrer**")
-    sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer")
+    sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer",stroke_width=2,)
 
 def save_signature(canvas_result, path):
     if canvas_result and canvas_result.image_data is not None:
@@ -253,3 +253,4 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
 
     with open(pdf_path,"rb") as f:
         st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
+
