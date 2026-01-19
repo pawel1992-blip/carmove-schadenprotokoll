@@ -14,18 +14,15 @@ from datetime import date, datetime
 # =============================
 USERS = {"admin": "2804CarM", "fahrer": "carmove"}
 
-# Session-State initialisieren
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user = ""
 
-# Wenn nicht eingeloggt, Login anzeigen
 if not st.session_state.logged_in:
     st.title("🔐 Login – CarMoveServices")
     username = st.text_input("Benutzername")
     password = st.text_input("Passwort", type="password")
     login_pressed = st.button("Login")
-
     if login_pressed:
         if username in USERS and USERS[username] == password:
             st.session_state.logged_in = True
@@ -33,7 +30,7 @@ if not st.session_state.logged_in:
             st.success("Erfolgreich eingeloggt!")
         else:
             st.error("Falsche Zugangsdaten")
-    st.stop()  # Alles andere stoppt, bis Login erfolgreich
+    st.stop()
 
 # =============================
 # Sidebar Logout
@@ -99,7 +96,6 @@ schadenpunkte = {
 # =============================
 st.markdown("<h1 style='color:#0F4C81;'>🚗 CarMoveServices – Schadenprotokoll</h1>", unsafe_allow_html=True)
 
-# Kundendaten
 col1, col2 = st.columns(2)
 with col1:
     kunde = st.text_input("Kundenname")
@@ -108,7 +104,6 @@ with col2:
     auftrag = st.text_input("Kennzeichen / Auftrag")
     protokoll_datum = st.date_input("Datum", value=date.today())
 
-# Schäden – modernere Darstellung
 st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 for bereich, punkte in schadenpunkte.items():
@@ -126,19 +121,14 @@ for bereich, punkte in schadenpunkte.items():
             """,
             unsafe_allow_html=True
         )
-
-        # Checkboxes in 2 Spalten
-        col_count = 2
-        cols = st.columns(col_count)
+        cols = st.columns(2)
         for i, punkt in enumerate(punkte):
-            col = cols[i % col_count]
+            col = cols[i % 2]
             checkbox_vars[punkt] = col.checkbox(punkt)
 
-# Schadenbilder
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader("Fotos aufnehmen oder hochladen", type=["jpg","jpeg","png"], accept_multiple_files=True)
 
-# Unterschriften
 st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
@@ -149,12 +139,11 @@ with c2:
     sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer")
 
 def save_signature(canvas_result, path):
-    """Speichert die Unterschrift, falls vorhanden."""
     if canvas_result and canvas_result.image_data is not None:
         Image.fromarray(canvas_result.image_data.astype("uint8")).convert("RGB").save(path)
 
 # =============================
-# MODERN PDF GENERIEREN
+# PDF GENERIEREN – NUR ANGEKREUZTE SCHÄDEN
 # =============================
 if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
     if not kunde or not fahrer:
@@ -164,7 +153,6 @@ if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
     tmp = tempfile.mkdtemp()
     zeit = datetime.now().strftime("%d.%m.%Y %H:%M")
 
-    # Unterschriften speichern
     ks = os.path.join(tmp, "kunde.png")
     fs = os.path.join(tmp, "fahrer.png")
     save_signature(sign_kunde, ks)
@@ -202,27 +190,34 @@ if st.button("📄 Modernes Schadenprotokoll als PDF erstellen"):
     # Schäden
     for bereich, punkte in schadenpunkte.items():
         checked_punkte = [p for p in punkte if checkbox_vars[p]]
+        if not checked_punkte:
+            continue
+
         box_height = 0.8 + 0.5 * len(checked_punkte)
         if y - box_height*cm < 2*cm:
             c.showPage()
             y = h - 2*cm
+
+        # Hintergrund Box
         c.setFillColor(HexColor("#f9f9f9"))
         c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 8, fill=True, stroke=False)
+        # Schatten
         c.setFillColor(HexColor("#e0e0e0"))
         c.roundRect(2.05*cm, y - box_height*cm - 0.05*cm, w - 4.1*cm, box_height*cm, 8, fill=True, stroke=False)
+
+        # Überschrift
         c.setFont("Helvetica-Bold",12)
         c.setFillColor(HexColor("#0F4C81"))
         c.drawString(2.3*cm, y - 0.3*cm, bereich)
         y -= 0.8*cm
+
+        # Angekreuzte Punkte
         c.setFont("Helvetica",10)
-        for punkt in punkte:
+        for punkt in checked_punkte:
             if y < 2*cm:
                 c.showPage()
                 y = h - 2*cm
-            if checkbox_vars[punkt]:
-                c.setFillColor(HexColor("#FF6B6B"))
-            else:
-                c.setFillColor(HexColor("#555555"))
+            c.setFillColor(HexColor("#FF6B6B"))
             c.drawString(2.5*cm, y, f"- {punkt}")
             y -= 0.5*cm
         y -= 0.3*cm
