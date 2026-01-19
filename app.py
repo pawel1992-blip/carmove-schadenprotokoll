@@ -240,9 +240,10 @@ c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
 c.drawCentredString(13 * cm, h - 7.5 * cm, "Fahrer")
  
 
-    c.save()
+ 
 
     with open(pdf_path, "rb") as f:
         st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
+
 
 
