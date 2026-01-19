@@ -49,24 +49,52 @@ with st.sidebar:
         st.rerun()
 
 # =============================
-# SCHADENPUNKTE
+# SCHADENPUNKTE (VOLLSTÄNDIG)
 # =============================
 schadenpunkte = {
     "Außen – Front": [
-        "Frontstoßstange beschädigt", "Motorhaube beschädigt",
-        "Steinschlag Windschutzscheibe", "Scheinwerfer beschädigt"
+        "Frontstoßstange beschädigt", "Frontstoßstange gerissen", "Frontstoßstange lackbeschädigt",
+        "Motorhaube beschädigt", "Motorhaube verbeult", "Motorhaube lackbeschädigt",
+        "Steinschlag Windschutzscheibe", "Riss Windschutzscheibe",
+        "Scheinwerfer beschädigt", "Scheinwerfer blind",
+        "Nebelscheinwerfer beschädigt", "Kühlergrill beschädigt"
     ],
     "Außen – Seite links": [
-        "Kratzer Tür vorne links", "Felgenschaden vorne links"
+        "Kratzer Tür vorne links", "Delle Tür vorne links", "Lackschaden Tür vorne links",
+        "Kratzer Tür hinten links", "Delle Tür hinten links", "Lackschaden Tür hinten links",
+        "Kotflügel vorne links beschädigt", "Seitenschweller links beschädigt",
+        "Außenspiegel links beschädigt", "Felgenschaden vorne links",
+        "Felgenschaden hinten links", "Reifen beschädigt links"
     ],
     "Außen – Seite rechts": [
-        "Kratzer Tür vorne rechts", "Felgenschaden vorne rechts"
+        "Kratzer Tür vorne rechts", "Delle Tür vorne rechts", "Lackschaden Tür vorne rechts",
+        "Kratzer Tür hinten rechts", "Delle Tür hinten rechts", "Lackschaden Tür hinten rechts",
+        "Kotflügel vorne rechts beschädigt", "Seitenschweller rechts beschädigt",
+        "Außenspiegel rechts beschädigt", "Felgenschaden vorne rechts",
+        "Felgenschaden hinten rechts", "Reifen beschädigt rechts"
+    ],
+    "Außen – Heck": [
+        "Heckstoßstange beschädigt", "Heckstoßstange gerissen", "Heckstoßstange lackbeschädigt",
+        "Kofferraumdeckel beschädigt", "Kofferraumdeckel verbeult",
+        "Rückleuchte links beschädigt", "Rückleuchte rechts beschädigt",
+        "Kennzeichenhalter beschädigt", "Auspuff beschädigt"
+    ],
+    "Dach & Glas": [
+        "Dach beschädigt", "Dach verkratzt", "Dachantenne beschädigt",
+        "Panoramadach beschädigt",
+        "Seitenscheibe vorne links beschädigt", "Seitenscheibe vorne rechts beschädigt",
+        "Seitenscheibe hinten links beschädigt", "Seitenscheibe hinten rechts beschädigt"
     ],
     "Innenraum": [
-        "Fahrersitz beschädigt", "Warnleuchte aktiv"
+        "Fahrersitz beschädigt", "Beifahrersitz beschädigt", "Rücksitzbank beschädigt",
+        "Armaturenbrett beschädigt", "Lenkrad beschädigt", "Schaltknauf beschädigt",
+        "Innenverkleidung beschädigt", "Teppichboden beschädigt",
+        "Dachhimmel beschädigt", "Geruchsbelästigung", "Warnleuchte aktiv"
     ],
-    "Technik": [
-        "Motor startet nicht", "Reifendruckwarnung aktiv"
+    "Technik / Sonstiges": [
+        "Motor startet nicht", "Getriebeproblem", "Bremsen auffällig",
+        "Lenkung auffällig", "Reifendruckwarnung aktiv",
+        "Batterie schwach", "Fehlermeldung Bordcomputer"
     ]
 }
 
@@ -85,10 +113,10 @@ with col2:
 
 st.subheader("🛠️ Schäden")
 checkbox_vars = {}
-for b, p in schadenpunkte.items():
-    with st.expander(b):
-        for s in p:
-            checkbox_vars[s] = st.checkbox(s)
+for bereich, punkte in schadenpunkte.items():
+    with st.expander(bereich):
+        for p in punkte:
+            checkbox_vars[p] = st.checkbox(p)
 
 st.subheader("📸 Schadenbilder")
 bilder = st.file_uploader(
@@ -100,56 +128,62 @@ bilder = st.file_uploader(
 st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
-    st.markdown("**Unterschrift Kunde**")
-    sign_kunde = st_canvas(height=180, width=400, key="kunde")
+    sign_kunde = st_canvas(
+        height=180, width=400,
+        background_color="white",
+        stroke_width=2,
+        stroke_color="black",
+        key="kunde"
+    )
 with c2:
-    st.markdown("**Unterschrift Fahrer**")
-    sign_fahrer = st_canvas(height=180, width=400, key="fahrer")
+    sign_fahrer = st_canvas(
+        height=180, width=400,
+        background_color="white",
+        stroke_width=2,
+        stroke_color="black",
+        key="fahrer"
+    )
+
+# =============================
+# HILFSFUNKTION
+# =============================
+def save_signature(canvas_result, path):
+    if canvas_result.image_data is not None:
+        img = Image.fromarray(canvas_result.image_data.astype("uint8"))
+        img.convert("RGB").save(path)
 
 # =============================
 # PDF ERSTELLEN
 # =============================
-def save_canvas(canvas_result, path):
-    if canvas_result.image_data is not None:
-        Image.fromarray(canvas_result.image_data.astype("uint8")).save(path)
-
 if st.button("📄 Schadenprotokoll als PDF erstellen"):
     if not kunde or not fahrer:
         st.error("Bitte Kunden- UND Fahrernamen eingeben")
         st.stop()
 
-    zeitstempel = datetime.now().strftime("%d.%m.%Y %H:%M")
     tmp = tempfile.mkdtemp()
+    zeit = datetime.now().strftime("%d.%m.%Y %H:%M")
 
     kunde_sign = os.path.join(tmp, "kunde.png")
     fahrer_sign = os.path.join(tmp, "fahrer.png")
-    save_canvas(sign_kunde, kunde_sign)
-    save_canvas(sign_fahrer, fahrer_sign)
+    save_signature(sign_kunde, kunde_sign)
+    save_signature(sign_fahrer, fahrer_sign)
 
     pdf_path = os.path.join(tmp, "Schadenprotokoll.pdf")
     c = pdf_canvas.Canvas(pdf_path, pagesize=A4)
     w, h = A4
+    y = h - 2 * cm
 
-    # ---------- HEADER ----------
+    # HEADER
     c.setFillColor(colors.HexColor("#0B5394"))
     c.rect(0, h - 3 * cm, w, 3 * cm, fill=1)
-
     c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(2 * cm, h - 2 * cm, "CarMoveServices")
-    c.setFont("Helvetica", 12)
-    c.drawString(2 * cm, h - 2.7 * cm, "Schadenprotokoll")
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(2 * cm, h - 2 * cm, "CarMoveServices – Schadenprotokoll")
 
-    # ---------- DATEN ----------
+    # DATEN
     y = h - 4 * cm
     c.setFillColor(colors.black)
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(2 * cm, y, "Kundendaten")
-    c.setStrokeColor(colors.grey)
-    c.line(2 * cm, y - 0.2 * cm, w - 2 * cm, y - 0.2 * cm)
-
     c.setFont("Helvetica", 11)
-    y -= 0.8 * cm
     c.drawString(2 * cm, y, f"Kunde: {kunde}")
     y -= 0.6 * cm
     c.drawString(2 * cm, y, f"Fahrer: {fahrer}")
@@ -158,40 +192,63 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     y -= 0.6 * cm
     c.drawString(2 * cm, y, f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
 
-    # ---------- SCHÄDEN ----------
+    # SCHÄDEN
     y -= 1 * cm
     c.setFont("Helvetica-Bold", 12)
     c.drawString(2 * cm, y, "Festgestellte Schäden")
-    c.line(2 * cm, y - 0.2 * cm, w - 2 * cm, y - 0.2 * cm)
-
+    y -= 0.6 * cm
     c.setFont("Helvetica", 10)
-    y -= 0.8 * cm
+
     for p, v in checkbox_vars.items():
         if v:
-            c.drawString(2.2 * cm, y, f"• {p}")
+            if y < 2 * cm:
+                c.showPage()
+                y = h - 2 * cm
+            c.drawString(2.2 * cm, y, f"- {p}")
             y -= 0.45 * cm
 
-    # ---------- UNTERSCHRIFTEN ----------
+    # BILDER
+    if bilder:
+        c.showPage()
+        y = h - 2 * cm
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(2 * cm, y, "Schadenbilder")
+        y -= 1 * cm
+
+        for uploaded in bilder:
+            img = Image.open(uploaded).convert("RGB")
+            img_path = os.path.join(tmp, uploaded.name)
+            img.save(img_path)
+
+            if y < 7 * cm:
+                c.showPage()
+                y = h - 2 * cm
+
+            c.drawImage(
+                img_path,
+                2 * cm,
+                y - 6 * cm,
+                width=w - 4 * cm,
+                height=6 * cm,
+                preserveAspectRatio=True
+            )
+            y -= 7 * cm
+
+    # UNTERSCHRIFTEN
     c.showPage()
     c.setFont("Helvetica-Bold", 14)
     c.drawString(2 * cm, h - 3 * cm, "Unterschriften")
 
-    # Kunde
     c.drawImage(kunde_sign, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
     c.setFont("Helvetica", 10)
     c.drawCentredString(5 * cm, h - 7.6 * cm, f"Kunde: {kunde}")
-    c.drawCentredString(5 * cm, h - 8.2 * cm, zeitstempel)
+    c.drawCentredString(5 * cm, h - 8.2 * cm, zeit)
 
-    # Fahrer
     c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
     c.drawCentredString(13 * cm, h - 7.6 * cm, f"Fahrer: {fahrer}")
-    c.drawCentredString(13 * cm, h - 8.2 * cm, zeitstempel)
+    c.drawCentredString(13 * cm, h - 8.2 * cm, zeit)
 
     c.save()
 
     with open(pdf_path, "rb") as f:
-        st.download_button(
-            "⬇️ PDF herunterladen",
-            f,
-            file_name="Schadenprotokoll.pdf"
-        )
+        st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
