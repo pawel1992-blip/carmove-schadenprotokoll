@@ -10,7 +10,7 @@ import tempfile
 from datetime import date, datetime
 
 # =============================
-# LOGIN / LOGOUT
+# LOGIN
 # =============================
 USERS = {"admin": "2804CarM", "fahrer": "carmove"}
 
@@ -23,16 +23,16 @@ if not st.session_state.logged_in:
     username = st.text_input("Benutzername")
     password = st.text_input("Passwort", type="password")
     login_pressed = st.button("Login")
-    
+
     if login_pressed:
         if username in USERS and USERS[username] == password:
             st.session_state.logged_in = True
             st.session_state.user = username
-            st.experimental_rerun()  # rerun nach erfolgreichem Login
+            st.experimental_rerun()
         else:
             st.error("Falsche Zugangsdaten")
     else:
-        st.stop()  # Stoppe alles, bis Login gedrückt wird
+        st.stop()  # Nur stoppen, wenn noch kein Login-Versuch
 
 # =============================
 # Sidebar Logout
@@ -41,7 +41,6 @@ with st.sidebar:
     st.markdown(f"**👤 Eingeloggt als:** {st.session_state.user}")
     if st.button("🚪 Logout"):
         st.session_state.logged_in = False
-        st.session_state.user = ""
         st.experimental_rerun()
 
 # =============================
@@ -240,18 +239,14 @@ def create_pdf():
             y = h - 2*cm
         lines = sonstiges_text.splitlines()
         box_height = 0.8 + 0.5 * len(lines)
-        # Hintergrund Box
         c.setFillColor(HexColor("#f0f0f0"))
         c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
-        # Schatten
         c.setFillColor(HexColor("#d9d9d9"))
         c.roundRect(2.05*cm, y - box_height*cm - 0.05*cm, w - 4.1*cm, box_height*cm, 6, fill=True, stroke=False)
-        # Überschrift
         c.setFont("Helvetica-Bold",12)
         c.setFillColor(HexColor("#0F4C81"))
         c.drawString(2.2*cm, y - 0.3*cm, "Sonstiges / Bemerkungen")
         y -= 0.8*cm
-        # Text
         c.setFont("Helvetica",10)
         for line in lines:
             if y < 2*cm:
@@ -294,9 +289,7 @@ def create_pdf():
     c.setFillColor(HexColor("#0F4C81"))
     c.drawString(2*cm, h-3*cm, "Unterschriften")
     c.drawImage(ks, 2*cm, h-7*cm, width=6*cm, height=3*cm)
-    c.drawCentredString(5*cm,h-7.6*cm,f"Kunde: {kunde}")
     c.drawImage(fs, 10*cm, h-7*cm, width=6*cm, height=3*cm)
-    c.drawCentredString(13*cm,h-7.6*cm,f"Fahrer: {fahrer}")
     c.save()
 
     return pdf_path
