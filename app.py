@@ -36,7 +36,7 @@ def login():
 login()
 
 with st.sidebar:
-    st.write(f"👤 Eingeloggt als: **{st.session_state.user}**")
+    st.markdown(f"**👤 Eingeloggt als:** {st.session_state.user}")
     if st.button("🚪 Logout"):
         st.session_state.logged_in = False
         st.rerun()
@@ -94,7 +94,7 @@ schadenpunkte = {
 # =============================
 # FORMULAR
 # =============================
-st.title("🚗 CarMoveServices – Schadenprotokoll")
+st.markdown("<h1 style='color:#0F4C81;'>🚗 CarMoveServices – Schadenprotokoll</h1>", unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -108,6 +108,7 @@ st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 for bereich, punkte in schadenpunkte.items():
     with st.expander(bereich):
+        st.markdown(f"<div style='background-color:#f0f0f0; padding:10px; border-radius:5px;'>{bereich}</div>", unsafe_allow_html=True)
         for punkt in punkte:
             checkbox_vars[punkt] = st.checkbox(punkt)
 
@@ -121,8 +122,10 @@ bilder = st.file_uploader(
 st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
+    st.markdown("**Kunde**")
     sign_kunde = st_canvas(height=180, width=400, background_color="white", key="kunde")
 with c2:
+    st.markdown("**Fahrer**")
     sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer")
 
 def save_signature(canvas_result, path):
@@ -152,10 +155,12 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     # HEADER
     c.setFont("Helvetica-Bold", 16)
     y = h - 2 * cm
+    c.setFillColorRGB(0.06, 0.3, 0.51)  # dunkles Blau
     c.drawString(2 * cm, y, "Schadenprotokoll – CarMoveServices")
     y -= 1.5 * cm
 
     c.setFont("Helvetica", 11)
+    c.setFillColorRGB(0, 0, 0)
     c.drawString(2 * cm, y, f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
     y -= 0.7 * cm
     c.drawString(2 * cm, y, f"Kunde: {kunde}")
@@ -167,6 +172,7 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
 
     # SCHÄDEN
     c.setFont("Helvetica-Bold", 12)
+    c.setFillColorRGB(0.2, 0.2, 0.2)
     c.drawString(2 * cm, y, "Festgestellte Schäden:")
     y -= 0.7 * cm
     c.setFont("Helvetica", 10)
@@ -185,6 +191,7 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         c.showPage()
         y = h - 2 * cm
         c.setFont("Helvetica-Bold", 12)
+        c.setFillColorRGB(0.06, 0.3, 0.51)
         c.drawString(2 * cm, y, "Schadenbilder")
         y -= 1 * cm
 
@@ -203,6 +210,7 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     # UNTERSCHRIFTEN
     c.showPage()
     c.setFont("Helvetica-Bold", 12)
+    c.setFillColorRGB(0, 0, 0)
     c.drawString(2 * cm, h - 3 * cm, "Unterschriften:")
 
     c.drawImage(ks, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
