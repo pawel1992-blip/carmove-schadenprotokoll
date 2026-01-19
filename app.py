@@ -19,25 +19,25 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.user = ""
 
-def show_login():
+# Wenn nicht eingeloggt, Login anzeigen
+if not st.session_state.logged_in:
     st.title("🔐 Login – CarMoveServices")
     username = st.text_input("Benutzername")
     password = st.text_input("Passwort", type="password")
-    if st.button("Login"):
+    login_pressed = st.button("Login")
+
+    if login_pressed:
         if username in USERS and USERS[username] == password:
             st.session_state.logged_in = True
             st.session_state.user = username
             st.success("Erfolgreich eingeloggt!")
-            st.experimental_rerun()
         else:
             st.error("Falsche Zugangsdaten")
+    st.stop()  # Alles andere stoppt, bis Login erfolgreich
 
-# Prüfen, ob eingeloggter Benutzer
-if not st.session_state.logged_in:
-    show_login()
-    st.stop()  # Alles andere wird gestoppt, bis Login erfolgreich
-
+# =============================
 # Sidebar Logout
+# =============================
 with st.sidebar:
     st.markdown(f"**👤 Eingeloggt als:** {st.session_state.user}")
     if st.button("🚪 Logout"):
@@ -108,7 +108,7 @@ with col2:
     auftrag = st.text_input("Kennzeichen / Auftrag")
     protokoll_datum = st.date_input("Datum", value=date.today())
 
-# Schäden – schönere Darstellung
+# Schäden – modernere Darstellung
 st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 for bereich, punkte in schadenpunkte.items():
@@ -191,7 +191,7 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     c.drawString(2*cm,y,f"Auftrag: {auftrag}")
     y -= 1*cm
 
-    # SCHÄDEN MIT ABGERUNDETEN BOXEN
+    # SCHÄDEN MIT BOXEN
     for bereich, punkte in schadenpunkte.items():
         box_height = 0.8 + 0.5*len(punkte)
         if y - box_height*cm < 2*cm:
