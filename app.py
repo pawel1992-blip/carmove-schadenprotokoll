@@ -23,16 +23,14 @@ if not st.session_state.logged_in:
     username = st.text_input("Benutzername")
     password = st.text_input("Passwort", type="password")
     login_pressed = st.button("Login")
-
     if login_pressed:
         if username in USERS and USERS[username] == password:
             st.session_state.logged_in = True
             st.session_state.user = username
-            st.experimental_rerun()
+            st.success("Erfolgreich eingeloggt!")
         else:
             st.error("Falsche Zugangsdaten")
-    else:
-        st.stop()  # Nur stoppen, wenn noch kein Login-Versuch
+    st.stop()
 
 # =============================
 # Sidebar Logout
@@ -153,10 +151,11 @@ st.subheader("✍️ Unterschriften")
 c1, c2 = st.columns(2)
 with c1:
     st.markdown("**Kunde**")
-    sign_kunde = st_canvas(height=180, width=400, background_color="white", key="kunde", stroke_width=2)
+    sign_kunde = st_canvas(height=180, width=400, background_color="white", key="kunde",stroke_width=2,)
+    
 with c2:
     st.markdown("**Fahrer**")
-    sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer", stroke_width=2)
+    sign_fahrer = st_canvas(height=180, width=400, background_color="white", key="fahrer",stroke_width=2,)
 
 def save_signature(canvas_result, path):
     if canvas_result and canvas_result.image_data is not None:
@@ -239,14 +238,18 @@ def create_pdf():
             y = h - 2*cm
         lines = sonstiges_text.splitlines()
         box_height = 0.8 + 0.5 * len(lines)
+        # Hintergrund Box
         c.setFillColor(HexColor("#f0f0f0"))
         c.roundRect(2*cm, y - box_height*cm, w - 4*cm, box_height*cm, 6, fill=True, stroke=False)
+        # Schatten
         c.setFillColor(HexColor("#d9d9d9"))
         c.roundRect(2.05*cm, y - box_height*cm - 0.05*cm, w - 4.1*cm, box_height*cm, 6, fill=True, stroke=False)
+        # Überschrift
         c.setFont("Helvetica-Bold",12)
         c.setFillColor(HexColor("#0F4C81"))
         c.drawString(2.2*cm, y - 0.3*cm, "Sonstiges / Bemerkungen")
         y -= 0.8*cm
+        # Text
         c.setFont("Helvetica",10)
         for line in lines:
             if y < 2*cm:
@@ -306,3 +309,5 @@ if st.button("📄 Schadenprotokoll erstellen"):
     
     with open(pdf_path,"rb") as f:
         st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
+
+
