@@ -108,7 +108,17 @@ st.subheader("🛠️ Schäden")
 checkbox_vars = {}
 for bereich, punkte in schadenpunkte.items():
     with st.expander(bereich):
-        st.markdown(f"<div style='background-color:#f0f0f0; padding:10px; border-radius:5px;'>{bereich}</div>", unsafe_allow_html=True)
+        # MODERN CARD DESIGN
+        st.markdown(f"""
+        <div style="
+            background-color:#f5f5f5;
+            padding:15px;
+            border-radius:10px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+            margin-bottom:10px;">
+            <b style='font-size:16px; color:#0F4C81'>{bereich}</b>
+        </div>
+        """, unsafe_allow_html=True)
         for punkt in punkte:
             checkbox_vars[punkt] = st.checkbox(punkt)
 
