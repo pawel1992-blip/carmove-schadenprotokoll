@@ -17,13 +17,16 @@ USERS = {"admin": "2804CarM", "fahrer": "carmove"}
 def login():
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
+        st.session_state.user = ""
 
     if not st.session_state.logged_in:
         st.title("🔐 Login – CarMoveServices")
         username = st.text_input("Benutzername")
         password = st.text_input("Passwort", type="password")
+
         if st.button("Login"):
-            if USERS.get(username) == password:
+            # Benutzername genau prüfen
+            if username in USERS and USERS[username] == password:
                 st.session_state.logged_in = True
                 st.session_state.user = username
                 st.experimental_rerun()
