@@ -163,38 +163,47 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
     w, h = A4
 
     # HEADER
-    c.setFont("Helvetica-Bold", 16)
+    c.setFont("Helvetica-Bold", 18)
     y = h - 2 * cm
-    c.setFillColorRGB(0.06, 0.3, 0.51)  # dunkles Blau
+    c.setFillColorRGB(0.06, 0.3, 0.51)
     c.drawString(2 * cm, y, "Schadenprotokoll – CarMoveServices")
-    y -= 1.5 * cm
+    y -= 2 * cm
 
     c.setFont("Helvetica", 11)
     c.setFillColorRGB(0, 0, 0)
     c.drawString(2 * cm, y, f"Datum: {protokoll_datum.strftime('%d.%m.%Y')}")
-    y -= 0.7 * cm
+    y -= 0.6 * cm
     c.drawString(2 * cm, y, f"Kunde: {kunde}")
-    y -= 0.7 * cm
+    y -= 0.6 * cm
     c.drawString(2 * cm, y, f"Fahrer: {fahrer}")
-    y -= 0.7 * cm
+    y -= 0.6 * cm
     c.drawString(2 * cm, y, f"Auftrag: {auftrag}")
     y -= 1 * cm
 
-    # SCHÄDEN
-    c.setFont("Helvetica-Bold", 12)
-    c.setFillColorRGB(0.2, 0.2, 0.2)
-    c.drawString(2 * cm, y, "Festgestellte Schäden:")
-    y -= 0.7 * cm
-    c.setFont("Helvetica", 10)
-
-    for p, v in checkbox_vars.items():
-        if v:
-            if y < 2 * cm:
-                c.showPage()
-                y = h - 2 * cm
-                c.setFont("Helvetica", 10)
-            c.drawString(2.2 * cm, y, f"- {p}")
-            y -= 0.5 * cm
+    # SCHÄDEN MIT FARBIGEN BOXEN
+    for bereich, punkte in schadenpunkte.items():
+        # Box
+        if y < 5 * cm:
+            c.showPage()
+            y = h - 2 * cm
+        c.setFillColorRGB(0.95, 0.95, 0.95)
+        c.rect(2 * cm, y - 0.4*cm, w - 4*cm, 0.6*cm + 0.5*cm*len(punkte), fill=True, stroke=False)
+        # Überschrift
+        c.setFillColorRGB(0.06, 0.3, 0.51)
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(2.2 * cm, y, bereich)
+        y -= 0.8 * cm
+        # Punkte
+        c.setFillColorRGB(0, 0, 0)
+        c.setFont("Helvetica", 10)
+        for punkt in punkte:
+            if checkbox_vars[punkt]:
+                if y < 2 * cm:
+                    c.showPage()
+                    y = h - 2 * cm
+                c.drawString(2.4 * cm, y, f"- {punkt}")
+                y -= 0.5 * cm
+        y -= 0.3*cm
 
     # BILDER
     if bilder:
@@ -204,16 +213,13 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
         c.setFillColorRGB(0.06, 0.3, 0.51)
         c.drawString(2 * cm, y, "Schadenbilder")
         y -= 1 * cm
-
         for img_file in bilder:
             img = Image.open(img_file).convert("RGB")
             img_path = os.path.join(tmp, img_file.name)
             img.save(img_path)
-
             if y < 7 * cm:
                 c.showPage()
                 y = h - 2 * cm
-
             c.drawImage(img_path, 2 * cm, y - 6 * cm, width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
             y -= 7 * cm
 
