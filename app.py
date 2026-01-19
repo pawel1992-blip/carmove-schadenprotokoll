@@ -226,13 +226,23 @@ if st.button("📄 Schadenprotokoll als PDF erstellen"):
                         width=w - 4 * cm, height=6 * cm, preserveAspectRatio=True)
             y -= 7 * cm
 
-    c.showPage()
-    c.drawString(2 * cm, h - 3 * cm, "Unterschriften")
-    c.drawImage(kunde_sign, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
-    c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+c.showPage()
+c.setFont("Helvetica-Bold", 12)
+c.drawString(2 * cm, h - 3 * cm, "Unterschriften")
+
+# Kunde
+c.drawImage(kunde_sign, 2 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+c.setFont("Helvetica", 10)
+c.drawCentredString(5 * cm, h - 7.5 * cm, "Kunde")
+
+# Fahrer
+c.drawImage(fahrer_sign, 10 * cm, h - 7 * cm, width=6 * cm, height=3 * cm)
+c.drawCentredString(13 * cm, h - 7.5 * cm, "Fahrer")
+ 
 
     c.save()
 
     with open(pdf_path, "rb") as f:
         st.download_button("⬇️ PDF herunterladen", f, file_name="Schadenprotokoll.pdf")
+
 
